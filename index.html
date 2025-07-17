@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeStudio Pro - Web Code Editor</title>
+    <meta name="description" content="A powerful browser-based code editor with syntax highlighting, live preview, and integrated console.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-quaternary: #30363d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --text-muted: #656d76;
+            --accent-blue: #2188ff;
+            --accent-green: #28a745;
+            --accent-orange: #fb8500;
+            --accent-red: #f85149;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #fbbf24;
+            --hover-bg: #21262d;
+            --active-bg: #1f2937;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            
+            /* Syntax highlighting colors - dark theme */
+            --syntax-comment: #6a737d;
+            --syntax-string: #32d74b;
+            --syntax-number: #d73a49;
+            --syntax-keyword: #ff7b72;
+            --syntax-function: #d2a8ff;
+            --syntax-class-name: #ffa657;
+            --syntax-tag: #7ee787;
+            --syntax-attr-name: #79c0ff;
+            --syntax-operator: #f85149;
+            --syntax-property: #79c0ff;
+            --syntax-selector: #ffa657;
+            --syntax-punctuation: #e6edf3;
+            --syntax-boolean: #ff7b72;
+            --syntax-doctype: #6a737d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: var(--bg-secondary);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--accent-blue);
+            font-size: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .save-btn, .format-btn {
+            background: var(--accent-green);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .save-btn:hover, .format-btn:hover {
+            background: #22c55e;
+            transform: translateY(-1px);
+        }
+
+        .format-btn {
+            background: var(--accent-orange);
+        }
+
+        .format-btn:hover {
+            background: #f59e0b;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 60px;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .sidebar-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .sidebar-icon::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: var(--accent-blue);
+            border-radius: 2px;
+            transition: height 0.2s ease;
+        }
+
+        .sidebar-icon.active::before {
+            height: 20px;
+        }
+
+        .sidebar-icon.active {
+            background: var(--active-bg);
+            color: var(--text-primary);
+        }
+        
+        .sidebar-icon:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        /* File Explorer */
+        .file-explorer {
+            width: 250px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .explorer-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explorer-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .explorer-btn {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .explorer-btn:hover {
+            color: var(--text-primary);
+            background: var(--hover-bg);
+        }
+
+        .file-tree {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            gap: 8px;
+            position: relative;
+        }
+
+        .file-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .file-item.active {
+            background: var(--active-bg);
+            color: var(--accent-blue);
+        }
+
+        .file-item i {
+            width: 16px;
+            font-size: 14px;
+        }
+        
+        .file-item .file-actions {
+            position: absolute;
+            right: 8px;
+            display: none;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            padding: 2px;
+        }
+        
+        .file-item:hover .file-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .file-action-btn {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+        
+        .file-action-btn:hover {
+            color: var(--text-primary);
+            background: var(--hover-bg);
+        }
+
+        .file-html i { color: #e44d26; }
+        .file-css i { color: #264de4; }
+        .file-js i { color: #f0db4f; }
+        .folder i { color: #ffd866; }
+        
+        /* Folder styles */
+        .file-item.folder {
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .folder-contents {
+            margin-left: 20px;
+            padding-left: 10px;
+            border-left: 1px dashed var(--border-color);
+        }
+        
+        .folder-contents .file-item {
+            margin-top: 5px;
+        }
+        
+        .file-item.folder .file-actions .add-file {
+            color: var(--accent-green);
+        }
+        
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tabs {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            position: relative;
+            min-width: 120px;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-blue);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        .tab.active::after {
+            transform: scaleX(1);
+        }
+        
+        .tab.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .tab:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .tab-close {
+            margin-left: auto;
+            padding: 2px 4px;
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab-close:hover {
+            background: var(--accent-red);
+        }
+        
+        .tab i {
+            font-size: 14px;
+        }
+        
+        .tab-html i { color: #e44d26; }
+        .tab-css i { color: #264de4; }
+        .tab-js i { color: #f0db4f; }
+        
+        .editor-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            background: var(--bg-secondary);
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-info {
+            display: flex;
+            gap: 16px;
+        }
+
+        .minimap-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .minimap-toggle:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .code-editor {
+            margin: 0;
+            padding: 16px;
+            background: var(--bg-primary) !important;
+            border: none;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            tab-size: 4;
+            flex: 1;
+            color: var(--text-primary);
+            position: relative;
+            overflow: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--bg-quaternary) var(--bg-primary);
+        }
+
+        .code-editor::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .code-editor::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .code-editor::-webkit-scrollbar-thumb {
+            background-color: var(--bg-quaternary);
+            border-radius: 6px;
+            border: 2px solid var(--bg-primary);
+        }
+
+        .code-editor::-webkit-scrollbar-thumb:hover {
+            background-color: var(--text-muted);
+        }
+
+        .code-editor pre {
+            margin: 0;
+            white-space: pre;
+        }
+
+        .code-editor:focus {
+            outline: none;
+        }
+
+        .code-editor code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            background: transparent !important;
+            padding: 0 !important;
+            white-space: pre;
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        .code-editor code::selection,
+        .code-editor code *::selection {
+            background: rgba(33, 136, 255, 0.3);
+        }
+
+        /* Enhanced Prism theme - Dark */
+        .token.comment { color: var(--syntax-comment); font-style: italic; }
+        .token.string { color: var(--syntax-string); }
+        .token.number { color: var(--syntax-number); }
+        .token.keyword { color: var(--syntax-keyword); }
+        .token.function { color: var(--syntax-function); }
+        .token.class-name { color: var(--syntax-class-name); }
+        .token.tag { color: var(--syntax-tag); }
+        .token.attr-name { color: var(--syntax-attr-name); }
+        .token.operator { color: var(--syntax-operator); }
+        .token.property { color: var(--syntax-property); }
+        .token.selector { color: var(--syntax-selector); }
+        .token.punctuation { color: var(--syntax-punctuation); }
+        .token.boolean { color: var(--syntax-boolean); }
+        .token.doctype { color: var(--syntax-doctype); }
+        
+        /* Preview and Console Area */
+        .preview-console {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .preview-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .preview-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .preview-header i {
+            color: var(--accent-green);
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .preview-btn {
+            background: var(--bg-quaternary);
+            border: none;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .preview-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .preview {
+            flex: 1;
+            background: white;
+            overflow: auto;
+            border-radius: 8px;
+            margin: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .console-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 40%;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .console-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .console-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .console-header i {
+            color: var(--accent-purple);
+        }
+
+        .console-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .clear-btn {
+            background: var(--bg-quaternary);
+            border: none;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .console {
+            flex: 1;
+            background: var(--bg-primary);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            overflow: hidden;
+        }
+
+        .console-output {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--bg-quaternary) var(--bg-primary);
+        }
+
+        .console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .console-output::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .console-output::-webkit-scrollbar-thumb {
+            background-color: var(--bg-quaternary);
+            border-radius: 4px;
+        }
+        
+        .console-line {
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .console-line:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .console-log {
+            color: var(--text-primary);
+        }
+        
+        .console-error {
+            color: var(--accent-red);
+            background: rgba(248, 81, 73, 0.1);
+        }
+        
+        .console-warn {
+            color: var(--accent-yellow);
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        .console-input-container {
+            display: flex;
+            align-items: center;
+            background: var(--bg-secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .console-prompt {
+            color: var(--accent-blue);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .console-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        .console-input:focus {
+            outline: none;
+        }
+
+        .console-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-secondary);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .status-left, .status-right {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .status-item:hover {
+            color: var(--text-primary);
+        }
+
+        .status-item.success {
+            color: var(--accent-green);
+        }
+
+        .status-item.error {
+            color: var(--accent-red);
+        }
+        
+        .run-button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .run-button:hover {
+            background: #1f7bd4;
+            transform: translateY(-1px);
+        }
+
+        .run-button:active {
+            transform: translateY(0);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .console-line {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 24px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: var(--shadow);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+        
+        .modal-content {
+            margin-bottom: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%237d8590' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5L4.5 7h7L8 10.5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-cancel:hover {
+            background: var(--hover-bg);
+        }
+        
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #1f7bd4;
+            transform: translateY(-1px);
+        }
+        
+        /* File rename input */
+        .file-rename-input {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-blue);
+            color: var(--text-primary);
+            font-size: 14px;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        
+        .file-rename-input:focus {
+            outline: none;
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .toast {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 280px;
+            max-width: 400px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast-icon {
+            font-size: 18px;
+            min-width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toast-success .toast-icon {
+            color: var(--accent-green);
+        }
+        
+        .toast-error .toast-icon {
+            color: var(--accent-red);
+        }
+        
+        .toast-warning .toast-icon {
+            color: var(--accent-yellow);
+        }
+        
+        .toast-info .toast-icon {
+            color: var(--accent-blue);
+        }
+        
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        .toast-close {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .toast-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Light theme */
+        .light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #f1f3f4;
+            --bg-quaternary: #e1e4e8;
+            --border-color: #d1d9e0;
+            --text-primary: #24292f;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --hover-bg: #f3f4f6;
+            --active-bg: #e5e7eb;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            
+            /* Light theme syntax highlighting colors */
+            --syntax-comment: #6e7781; 
+            --syntax-string: #0a7529;
+            --syntax-number: #953800;
+            --syntax-keyword: #cf222e;
+            --syntax-function: #8250df;
+            --syntax-class-name: #953800;
+            --syntax-tag: #116329;
+            --syntax-attr-name: #0550ae;
+            --syntax-operator: #cf222e;
+            --syntax-property: #0550ae;
+            --syntax-selector: #953800;
+            --syntax-punctuation: #24292f;
+            --syntax-boolean: #cf222e;
+            --syntax-doctype: #6e7781;
+        }
+        
+        /* Light theme specific overrides */
+        .light-theme .code-editor {
+            color: #24292f;
+        }
+        
+        .light-theme .code-editor code::selection,
+        .light-theme .code-editor code *::selection {
+            background: rgba(33, 136, 255, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .file-explorer {
+                display: none;
+            }
+            
+            .preview-console {
+                width: 100%;
+                position: absolute;
+                right: 0;
+                height: 50%;
+                bottom: 30px;
+                z-index: 10;
+                display: none;
+            }
+            
+            .preview-console.active {
+                display: flex;
+            }
+            
+            .sidebar {
+                width: 50px;
+            }
+
+            .header {
+                padding: 8px 12px;
+            }
+
+            .logo h1 {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <h1>CodeStudio Pro</h1>
+            </div>
+            <div class="header-actions">
+                <button class="format-btn" id="format-btn">
+                    <i class="fas fa-magic"></i>
+                    Format
+                </button>
+                <button class="save-btn" id="save-btn">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-icon active" title="Explorer" id="explorer-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="sidebar-icon" title="Search" id="search-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="sidebar-icon" title="Source Control" id="git-icon">
+                    <i class="fas fa-code-branch"></i>
+                </div>
+                <div class="sidebar-icon" title="Run and Debug" id="debug-icon">
+                    <i class="fas fa-bug"></i>
+                </div>
+                <div class="sidebar-icon" title="Extensions" id="extensions-icon">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+            </div>
+
+            <!-- File Explorer -->
+            <div class="file-explorer" id="file-explorer">
+                <div class="explorer-header">
+                    <div class="explorer-title">
+                        <i class="fas fa-folder-open"></i>
+                        Explorer
+                    </div>
+                    <div class="explorer-actions">
+                        <button class="explorer-btn" id="new-file-btn" title="New File">
+                            <i class="fas fa-file-plus"></i>
+                        </button>
+                        <button class="explorer-btn" id="new-folder-btn" title="New Folder">
+                            <i class="fas fa-folder"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="file-tree" id="file-tree">
+                    <div class="file-item file-html active" data-file="html" data-filename="index.html">
+                        <i class="fab fa-html5"></i>
+                        <span class="file-name">index.html</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn file-rename" title="Rename">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="file-action-btn file-delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="file-item file-css" data-file="css" data-filename="style.css">
+                        <i class="fab fa-css3-alt"></i>
+                        <span class="file-name">style.css</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn file-rename" title="Rename">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="file-action-btn file-delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="file-item file-js" data-file="js" data-filename="script.js">
+                        <i class="fab fa-js"></i>
+                        <span class="file-name">script.js</span>
+                        <div class="file-actions">
+                            <button class="file-action-btn file-rename" title="Rename">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="file-action-btn file-delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <div class="tabs" id="tabs">
+                    <div class="tab tab-html active" data-file="html" data-filename="index.html">
+                        <i class="fab fa-html5"></i>
+                        <span class="tab-filename">index.html</span>
+                        <span class="tab-close">×</span>
+                    </div>
+                    <div class="tab tab-css" data-file="css" data-filename="style.css">
+                        <i class="fab fa-css3-alt"></i>
+                        <span class="tab-filename">style.css</span>
+                        <span class="tab-close">×</span>
+                    </div>
+                    <div class="tab tab-js" data-file="js" data-filename="script.js">
+                        <i class="fab fa-js"></i>
+                        <span class="tab-filename">script.js</span>
+                        <span class="tab-close">×</span>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div class="editor-wrapper" id="html-wrapper" style="display: block;">
+                        <div class="editor-header">
+                            <div class="editor-info">
+                                <span>HTML</span>
+                                <span>UTF-8</span>
+                                <span id="html-lines">1 lines</span>
+                            </div>
+                            <button class="minimap-toggle">
+                                <i class="fas fa-map"></i>
+                            </button>
+                        </div>
+                        <pre class="code-editor"><code class="language-html" id="html-editor" contenteditable="true" spellcheck="false">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;CodeStudio Pro - Demo&lt;/title&gt;
+    &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="hero-section"&gt;
+        &lt;div class="container"&gt;
+            &lt;h1 class="hero-title"&gt;Welcome to CodeStudio Pro&lt;/h1&gt;
+            &lt;p class="hero-subtitle"&gt;A powerful, modern code editor with advanced features&lt;/p&gt;
+            &lt;div class="hero-actions"&gt;
+                &lt;button class="btn btn-primary" id="demo-btn"&gt;
+                    &lt;i class="fas fa-play"&gt;&lt;/i&gt;
+                    Try Demo
+                &lt;/button&gt;
+                &lt;button class="btn btn-secondary" id="learn-btn"&gt;
+                    &lt;i class="fas fa-book"&gt;&lt;/i&gt;
+                    Learn More
+                &lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="features-section"&gt;
+        &lt;div class="container"&gt;
+            &lt;h2 class="section-title"&gt;Powerful Features&lt;/h2&gt;
+            &lt;div class="features-grid"&gt;
+                &lt;div class="feature-card"&gt;
+                    &lt;div class="feature-icon"&gt;
+                        &lt;i class="fas fa-code"&gt;&lt;/i&gt;
+                    &lt;/div&gt;
+                    &lt;h3&gt;Smart Code Editor&lt;/h3&gt;
+                    &lt;p&gt;Syntax highlighting, auto-completion, and intelligent code suggestions&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class="feature-card"&gt;
+                    &lt;div class="feature-icon"&gt;
+                        &lt;i class="fas fa-desktop"&gt;&lt;/i&gt;
+                    &lt;/div&gt;
+                    &lt;h3&gt;Live Preview&lt;/h3&gt;
+                    &lt;p&gt;Real-time preview of your web applications with instant updates&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class="feature-card"&gt;
+                    &lt;div class="feature-icon"&gt;
+                        &lt;i class="fas fa-terminal"&gt;&lt;/i&gt;
+                    &lt;/div&gt;
+                    &lt;h3&gt;Integrated Console&lt;/h3&gt;
+                    &lt;p&gt;Built-in console for debugging and testing your JavaScript code&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+                    <div class="editor-wrapper" id="css-wrapper" style="display: none;">
+                        <div class="editor-header">
+                            <div class="editor-info">
+                                <span>CSS</span>
+                                <span>UTF-8</span>
+                                <span id="css-lines">1 lines</span>
+                            </div>
+                            <button class="minimap-toggle">
+                                <i class="fas fa-map"></i>
+                            </button>
+                        </div>
+                        <pre class="code-editor"><code class="language-css" id="css-editor" contenteditable="true" spellcheck="false">:root {
+    --color-primary: #2188ff;
+    --color-secondary: #8b5cf6;
+    --color-accent: #fb8500;
+    --color-text: #24292f;
+    --color-text-light: #656d76;
+    --color-bg: #ffffff;
+    --color-bg-secondary: #f6f8fa;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--color-text);
+    line-height: 1.6;
+    background-color: var(--color-bg);
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Hero Section */
+.hero-section {
+    padding: 100px 0 60px;
+    background: linear-gradient(45deg, #f6f8fa, #e1e4e8);
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 48px;
+    margin-bottom: 16px;
+    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 20px;
+    color: var(--color-text-light);
+    margin-bottom: 40px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1f7bd4;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-text-light);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-secondary);
+    transform: translateY(-2px);
+}
+
+/* Features Section */
+.features-section {
+    padding: 80px 0;
+    background-color: var(--color-bg);
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    font-size: 36px;
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    width: 80px;
+    height: 4px;
+    background: var(--color-primary);
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    padding: 30px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    text-align: center;
+    border: 1px solid #e1e4e8;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.feature-icon i {
+    font-size: 28px;
+    color: white;
+}
+
+.feature-card h3 {
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.feature-card p {
+    color: var(--color-text-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 36px;
+    }
+    
+    .hero-subtitle {
+        font-size: 18px;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}</code></pre>
+                    </div>
+                    <div class="editor-wrapper" id="js-wrapper" style="display: none;">
+                        <div class="editor-header">
+                            <div class="editor-info">
+                                <span>JavaScript</span>
+                                <span>UTF-8</span>
+                                <span id="js-lines">1 lines</span>
+                            </div>
+                            <button class="minimap-toggle">
+                                <i class="fas fa-map"></i>
+                            </button>
+                        </div>
+                        <pre class="code-editor"><code class="language-javascript" id="js-editor" contenteditable="true" spellcheck="false">// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Elements
+    const demoBtn = document.getElementById('demo-btn');
+    const learnBtn = document.getElementById('learn-btn');
+    
+    // Event listeners
+    demoBtn.addEventListener('click', function() {
+        console.log('Demo button clicked!');
+        showNotification('Demo mode activated', 'success');
+        
+        // Sample animation
+        animateFeatureCards();
+    });
+    
+    learnBtn.addEventListener('click', function() {
+        console.log('Learn more button clicked!');
+        showNotification('Redirecting to documentation...', 'info');
+        
+        // Simulate redirection after a delay
+        setTimeout(() => {
+            console.log('Redirection would happen here in a real application');
+        }, 1500);
+    });
+    
+    // Functions
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas ${getIconForType(type)}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Add to body
+        document.body.appendChild(notification);
+        
+        // Show with animation
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Remove after timeout
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+        
+        console.log(`Notification: ${message} (${type})`);
+    }
+    
+    function getIconForType(type) {
+        switch(type) {
+            case 'success': return 'fa-check-circle';
+            case 'error': return 'fa-exclamation-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            case 'info': 
+            default: return 'fa-info-circle';
+        }
+    }
+    
+    function animateFeatureCards() {
+        const cards = document.querySelectorAll('.feature-card');
+        
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transform = 'scale(1.05)';
+                
+                setTimeout(() => {
+                    card.style.transform = 'translateY(-10px)';
+                }, 300);
+            }, index * 200);
+        });
+    }
+    
+    // Initialize
+    console.log('CodeStudio Pro demo initialized');
+    showNotification('Welcome to CodeStudio Pro!', 'success');
+});</code></pre>
+                    </div>
+                    
+                    <!-- Preview & Console Area -->
+                    <div class="preview-console">
+                        <div class="preview-container">
+                            <div class="preview-header">
+                                <div class="preview-header-left">
+                                    <i class="fas fa-desktop"></i>
+                                    <span>Preview</span>
+                                </div>
+                                <div class="preview-actions">
+                                    <button class="preview-btn" id="refresh-preview">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                    <button class="preview-btn" id="external-preview">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <iframe class="preview" id="preview-frame" src="about:blank"></iframe>
+                        </div>
+                        
+                        <div class="console-container">
+                            <div class="console-header">
+                                <div class="console-header-left">
+                                    <i class="fas fa-terminal"></i>
+                                    <span>Console</span>
+                                </div>
+                                <div class="console-actions">
+                                    <button class="clear-btn" id="clear-console">
+                                        <i class="fas fa-trash-alt"></i>
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="console">
+                                <div class="console-output" id="console-output">
+                                    <div class="console-line console-log">
+                                        <span>> CodeStudio Pro console initialized</span>
+                                    </div>
+                                    <div class="console-line console-log">
+                                        <span>> Welcome! Use console.log(), console.warn(), and console.error() to see output here</span>
+                                    </div>
+                                </div>
+                                <div class="console-input-container">
+                                    <span class="console-prompt">></span>
+                                    <input type="text" class="console-input" id="console-input" placeholder="Type JavaScript code here and press Enter to run...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Ready</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>main</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-users"></i>
+                    <span>1 collaborator</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <button class="run-button" id="run-button">
+                    <i class="fas fa-play"></i>
+                    Run
+                </button>
+                <div class="status-item">
+                    <i class="fas fa-file-code"></i>
+                    <span id="current-language">HTML</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Updated just now</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal-overlay" id="new-file-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">New File</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="input-group">
+                    <label for="new-filename">File Name</label>
+                    <input type="text" id="new-filename" placeholder="e.g., app.js">
+                </div>
+                <div class="input-group">
+                    <label for="new-filetype">File Type</label>
+                    <select id="new-filetype">
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="js">JavaScript</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel" id="cancel-new-file">Cancel</button>
+                <button class="modal-btn btn-primary" id="create-new-file">Create</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Delete File</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <p>Are you sure you want to delete <span id="delete-filename">this file</span>? This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel" id="cancel-delete">Cancel</button>
+                <button class="modal-btn btn-primary" id="confirm-delete" style="background-color: var(--accent-red);">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Load Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-javascript.min.js"></script>
+    
+    <!-- Load Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Main Editor Script -->
+    <script src="editor.js"></script>
+</body>
+</html>
