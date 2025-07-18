@@ -49,6 +49,462 @@ const progressTitle = document.getElementById('progress-title');
 const progressFill = document.getElementById('progress-fill');
 const progressText = document.getElementById('progress-text');
 
+// Local Storage Configuration
+const STORAGE_CONFIG = {
+    key: 'htmlOrgCodeEditor',
+    version: '1.0',
+    expireDays: 30
+};
+
+// Local Storage Management
+class LocalStorageManager {
+    constructor() {
+        this.storageKey = STORAGE_CONFIG.key;
+        this.version = STORAGE_CONFIG.version;
+        this.expireDays = STORAGE_CONFIG.expireDays;
+    }
+
+    // Save data to localStorage with timestamp
+    saveData(data) {
+        try {
+            const saveData = {
+                version: this.version,
+                timestamp: Date.now(),
+                expiresAt: Date.now() + (this.expireDays * 24 * 60 * 60 * 1000), // 30 days from now
+                lastAccessed: Date.now(),
+                data: data
+            };
+            
+            localStorage.setItem(this.storageKey, JSON.stringify(saveData));
+            return true;
+        } catch (error) {
+            console.error('Failed to save to localStorage:', error);
+            showToast('Failed to save work to local storage', 'error');
+            return false;
+        }
+    }
+
+    // Load data from localStorage
+    loadData() {
+        try {
+            const saved = localStorage.getItem(this.storageKey);
+            if (!saved) return null;
+
+            const saveData = JSON.parse(saved);
+            
+            // Check if data is expired
+            if (Date.now() > saveData.expiresAt) {
+                this.clearData();
+                showToast('Saved work has expired (30 days old). Starting fresh.', 'info');
+                return null;
+            }
+
+            // Update last accessed time and reset expiry (extend for another 30 days)
+            saveData.lastAccessed = Date.now();
+            saveData.expiresAt = Date.now() + (this.expireDays * 24 * 60 * 60 * 1000);
+            localStorage.setItem(this.storageKey, JSON.stringify(saveData));
+
+            return saveData.data;
+        } catch (error) {
+            console.error('Failed to load from localStorage:', error);
+            this.clearData(); // Clear corrupted data
+            return null;
+        }
+    }
+
+    // Clear all saved data
+    clearData() {
+        try {
+            localStorage.removeItem(this.storageKey);
+            return true;
+        } catch (error) {
+            console.error('Failed to clear localStorage:', error);
+            return false;
+        }
+    }
+
+    // Check if saved data exists
+    hasData() {
+        try {
+            const saved = localStorage.getItem(this.storageKey);
+            if (!saved) return false;
+
+            const saveData = JSON.parse(saved);
+            return Date.now() <= saveData.expiresAt;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // Get info about saved data
+    getSaveInfo() {
+        try {
+            const saved = localStorage.getItem(this.storageKey);
+            if (!saved) return null;
+
+            const saveData = JSON.parse(saved);
+            const daysLeft = Math.ceil((saveData.expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+            const lastAccessed = new Date(saveData.lastAccessed);
+
+            return {
+                daysLeft: Math.max(0, daysLeft),
+                lastAccessed: lastAccessed,
+                isExpired: Date.now() > saveData.expiresAt
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+}
+
+// Initialize localStorage manager
+const storageManager = new LocalStorageManager();
+
+// Auto-save functionality
+function autoSaveToLocalStorage() {
+    // Get current state of all editors and files
+    const currentState = {
+        fileContents: JSON.parse(JSON.stringify(fileContents)), // Deep copy
+        currentFile: { ...currentFile },
+        timestamp: Date.now()
+    };
+
+    // Save current editor content to fileContents before saving
+    if (currentFile && currentFile.type && currentFile.name) {
+        const currentEditor = getCurrentEditor();
+        if (currentEditor) {
+            currentState.fileContents[currentFile.type][currentFile.name] = currentEditor.textContent;
+        }
+    }
+
+    const success = storageManager.saveData(currentState);
+    
+    // Update status indicator
+    updateAutoSaveStatus(success);
+}
+
+// Update auto-save status indicator
+function updateAutoSaveStatus(success = true, message = null) {
+    const statusElement = document.getElementById('auto-save-status');
+    if (!statusElement) return;
+
+    const icon = statusElement.querySelector('i');
+    const text = statusElement.querySelector('span');
+
+    if (success) {
+        statusElement.className = 'status-item success';
+        icon.className = 'fas fa-save';
+        text.textContent = message || 'Auto-saved';
+        
+        // Show brief "saving" animation
+        icon.className = 'fas fa-spinner fa-spin';
+        setTimeout(() => {
+            icon.className = 'fas fa-save';
+        }, 500);
+    } else {
+        statusElement.className = 'status-item error';
+        icon.className = 'fas fa-exclamation-triangle';
+        text.textContent = 'Save failed';
+    }
+}
+
+// Load data from localStorage and restore editor state
+function loadFromLocalStorage() {
+    const savedData = storageManager.loadData();
+    if (!savedData) return false;
+
+    try {
+        // Restore file contents
+        if (savedData.fileContents) {
+            Object.assign(fileContents, savedData.fileContents);
+        }
+
+        // Restore current file
+        if (savedData.currentFile) {
+            currentFile = savedData.currentFile;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Failed to restore from localStorage:', error);
+        showToast('Failed to restore saved work', 'error');
+        return false;
+    }
+}
+
+// Get current active editor
+function getCurrentEditor() {
+    switch (currentFile.type) {
+        case 'html': return htmlEditor;
+        case 'css': return cssEditor;
+        case 'js': return jsEditor;
+        default: return null;
+    }
+}
+
+// Auto-save with debouncing
+let autoSaveTimeout = null;
+const AUTO_SAVE_DELAY = 3000; // 3 seconds delay
+
+function triggerAutoSave() {
+    if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+    }
+    
+    autoSaveTimeout = setTimeout(() => {
+        autoSaveToLocalStorage();
+    }, AUTO_SAVE_DELAY);
+}
+
+// Check for saved data and offer to restore
+function checkAndOfferRestore() {
+    if (storageManager.hasData()) {
+        const saveInfo = storageManager.getSaveInfo();
+        if (saveInfo && !saveInfo.isExpired) {
+            const lastAccessed = saveInfo.lastAccessed.toLocaleDateString() + ' ' + 
+                               saveInfo.lastAccessed.toLocaleTimeString();
+            
+            const message = `Found saved work from ${lastAccessed}\n\nYour work is automatically saved and will be available for ${saveInfo.daysLeft} more days.\n\nWould you like to restore it?`;
+            
+            if (confirm(message)) {
+                const restored = loadFromLocalStorage();
+                if (restored) {
+                    restoreEditorUI();
+                    updateAutoSaveStatus(true, `Restored (${saveInfo.daysLeft}d left)`);
+                    showToast(`Work restored! Auto-save active for ${saveInfo.daysLeft} more days.`, 'success');
+                    return true;
+                }
+            } else {
+                // User chose not to restore, clear the data
+                storageManager.clearData();
+                updateAutoSaveStatus(true, 'Starting fresh');
+                showToast('Starting with clean template. Auto-save is active.', 'info');
+            }
+        }
+    } else {
+        // No saved data, show auto-save is active
+        updateAutoSaveStatus(true, 'Auto-save active');
+    }
+    return false;
+}
+
+// Restore the editor UI after loading data
+function restoreEditorUI() {
+    // First, rebuild file tree with saved files
+    rebuildFileTree();
+
+    // Then rebuild tabs
+    rebuildTabs();
+
+    // Update all editor content with saved data
+    const htmlEditor = document.getElementById('html-editor');
+    const cssEditor = document.getElementById('css-editor');
+    const jsEditor = document.getElementById('js-editor');
+
+    // Load content for currently existing files
+    Object.keys(fileContents.html).forEach(fileName => {
+        if (fileName === 'index.html' && htmlEditor) {
+            htmlEditor.textContent = fileContents.html[fileName];
+        }
+    });
+    
+    Object.keys(fileContents.css).forEach(fileName => {
+        if (fileName === 'style.css' && cssEditor) {
+            cssEditor.textContent = fileContents.css[fileName];
+        }
+    });
+    
+    Object.keys(fileContents.js).forEach(fileName => {
+        if (fileName === 'script.js' && jsEditor) {
+            jsEditor.textContent = fileContents.js[fileName];
+        }
+    });
+
+    // Switch to the last active file if it exists
+    if (currentFile && currentFile.type && currentFile.name && 
+        fileContents[currentFile.type] && fileContents[currentFile.type][currentFile.name]) {
+        // Activate the correct file item
+        const fileItem = document.querySelector(`[data-file="${currentFile.type}"][data-filename="${currentFile.name}"]`);
+        if (fileItem) {
+            document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+            fileItem.classList.add('active');
+        }
+
+        // Activate the correct tab
+        const tab = document.querySelector(`[data-file="${currentFile.type}"][data-filename="${currentFile.name}"].tab`);
+        if (tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        }
+
+        // Show the correct editor
+        document.querySelectorAll('.editor-wrapper').forEach(wrapper => wrapper.style.display = 'none');
+        const editorWrapper = document.getElementById(`${currentFile.type}-wrapper`);
+        if (editorWrapper) {
+            editorWrapper.style.display = 'block';
+        }
+
+        // Update current language
+        const currentLanguage = document.getElementById('current-language');
+        if (currentLanguage) {
+            currentLanguage.textContent = currentFile.type.toUpperCase();
+        }
+    } else {
+        // Fallback to first available file
+        const firstFile = getFirstAvailableFile();
+        if (firstFile) {
+            currentFile = firstFile;
+            const fileItem = document.querySelector(`[data-file="${firstFile.type}"][data-filename="${firstFile.name}"]`);
+            if (fileItem) {
+                fileItem.click();
+            }
+        }
+    }
+
+    // Update preview
+    updatePreview();
+    
+    // Re-highlight syntax
+    highlightCurrentEditor();
+}
+
+// Get first available file from fileContents
+function getFirstAvailableFile() {
+    for (const fileType of ['html', 'css', 'js']) {
+        const files = Object.keys(fileContents[fileType]);
+        if (files.length > 0) {
+            return { type: fileType, name: files[0] };
+        }
+    }
+    return null;
+}
+
+// Rebuild file tree from fileContents
+function rebuildFileTree() {
+    const fileTree = document.getElementById('file-tree');
+    fileTree.innerHTML = '';
+
+    // Add all files from fileContents in the correct order (html, css, js)
+    const fileTypes = ['html', 'css', 'js'];
+    
+    fileTypes.forEach(fileType => {
+        Object.keys(fileContents[fileType]).forEach(fileName => {
+            const fileItem = document.createElement('div');
+            fileItem.className = `file-item file-${fileType}`;
+            fileItem.setAttribute('data-file', fileType);
+            fileItem.setAttribute('data-filename', fileName);
+            
+            const iconClass = fileType === 'html' ? 'html5' : fileType === 'css' ? 'css3-alt' : 'js';
+            
+            fileItem.innerHTML = `
+                <i class="fab fa-${iconClass}"></i>
+                <span class="file-name">${fileName}</span>
+                <div class="file-actions">
+                    <button class="file-action-btn file-rename" title="Rename">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="file-action-btn file-delete" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            fileTree.appendChild(fileItem);
+            
+            // Setup event listeners for this file item
+            setupFileItemEvents(fileItem, fileType, fileName);
+        });
+    });
+}
+
+// Rebuild tabs from fileContents
+function rebuildTabs() {
+    const tabsContainer = document.getElementById('tabs');
+    tabsContainer.innerHTML = '';
+
+    // Add tabs for all files in the correct order (html, css, js)
+    const fileTypes = ['html', 'css', 'js'];
+    
+    fileTypes.forEach(fileType => {
+        Object.keys(fileContents[fileType]).forEach(fileName => {
+            const tab = document.createElement('div');
+            tab.className = `tab tab-${fileType}`;
+            tab.setAttribute('data-file', fileType);
+            tab.setAttribute('data-filename', fileName);
+            
+            const iconClass = fileType === 'html' ? 'html5' : fileType === 'css' ? 'css3-alt' : 'js';
+            
+            tab.innerHTML = `
+                <i class="fab fa-${iconClass}"></i>
+                <span class="tab-filename">${fileName}</span>
+                <span class="tab-close">×</span>
+            `;
+            
+            tabsContainer.appendChild(tab);
+            
+            // Setup tab click event
+            tab.addEventListener('click', function() {
+                // Save current content before switching
+                if (currentFile && currentFile.type && currentFile.name) {
+                    const currentEditor = getCurrentEditor();
+                    if (currentEditor) {
+                        fileContents[currentFile.type][currentFile.name] = currentEditor.textContent;
+                    }
+                }
+                
+                // Deactivate all tabs and file items
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.file-item').forEach(f => f.classList.remove('active'));
+                
+                // Activate this tab
+                this.classList.add('active');
+                
+                // Activate corresponding file item
+                const fileItem = document.querySelector(`[data-file="${fileType}"][data-filename="${fileName}"].file-item`);
+                if (fileItem) {
+                    fileItem.classList.add('active');
+                }
+                
+                // Hide all editors
+                document.querySelectorAll('.editor-wrapper').forEach(wrapper => wrapper.style.display = 'none');
+                
+                // Show the corresponding editor and load content
+                const editorWrapper = document.getElementById(`${fileType}-wrapper`);
+                if (editorWrapper) {
+                    editorWrapper.style.display = 'block';
+                    
+                    // Update current file
+                    currentFile = { type: fileType, name: fileName };
+                    
+                    // Load content into editor
+                    const editor = getCurrentEditor();
+                    if (editor && fileContents[fileType][fileName]) {
+                        editor.textContent = fileContents[fileType][fileName];
+                    }
+                    
+                    // Update language indicator
+                    const currentLanguage = document.getElementById('current-language');
+                    if (currentLanguage) {
+                        currentLanguage.textContent = fileType.toUpperCase();
+                    }
+                    
+                    // Highlight code
+                    highlightCurrentEditor();
+                    
+                    // Trigger auto-save
+                    triggerAutoSave();
+                }
+            });
+            
+            // Setup tab close event
+            tab.querySelector('.tab-close').addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeTab(tab);
+            });
+        });
+    });
+}
+
 // Store file contents
 const fileContents = {
     'html': {},
@@ -69,34 +525,347 @@ const fileTemplates = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New HTML File</title>
+    <title>New Project</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Hello World</h1>
+    <div class="container">
+        <h1>Welcome to Your New Project</h1>
+        <p>Start building something amazing!</p>
+    </div>
     
     <script src="script.js"></script>
 </body>
 </html>`,
-    css: `/* Styles for the new CSS file */
+    css: `/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
+    line-height: 1.6;
     color: #333;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
 }
 
 h1 {
-    color: #2188ff;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 18px;
+    color: #666;
 }`,
-    js: `// JavaScript for the new file
+    js: `// Your JavaScript code here
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('New JavaScript file loaded!');
+    console.log('Project initialized!');
     
-    // Your code here
+    // Add your code here
 });`
 };
+
+// Emmet-like expansion system
+const emmetExpansions = {
+    // HTML expansions
+    html: {
+        // Basic HTML structure
+        '!': '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>',
+        'html5': '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Document</title>\n</head>\n<body>\n    \n</body>\n</html>',
+        
+        // Common HTML elements
+        'div': '<div></div>',
+        'span': '<span></span>',
+        'p': '<p></p>',
+        'h1': '<h1></h1>',
+        'h2': '<h2></h2>',
+        'h3': '<h3></h3>',
+        'h4': '<h4></h4>',
+        'h5': '<h5></h5>',
+        'h6': '<h6></h6>',
+        'a': '<a href=""></a>',
+        'img': '<img src="" alt="">',
+        'br': '<br>',
+        'hr': '<hr>',
+        
+        // Lists
+        'ul': '<ul>\n    <li></li>\n</ul>',
+        'ol': '<ol>\n    <li></li>\n</ol>',
+        'li': '<li></li>',
+        'dl': '<dl>\n    <dt></dt>\n    <dd></dd>\n</dl>',
+        'dt': '<dt></dt>',
+        'dd': '<dd></dd>',
+        
+        // Forms
+        'form': '<form action="">\n    \n</form>',
+        'input': '<input type="text">',
+        'input:text': '<input type="text">',
+        'input:email': '<input type="email">',
+        'input:password': '<input type="password">',
+        'input:number': '<input type="number">',
+        'input:submit': '<input type="submit" value="Submit">',
+        'input:button': '<input type="button" value="Button">',
+        'input:checkbox': '<input type="checkbox">',
+        'input:radio': '<input type="radio">',
+        'textarea': '<textarea></textarea>',
+        'select': '<select>\n    <option value=""></option>\n</select>',
+        'option': '<option value=""></option>',
+        'button': '<button></button>',
+        'label': '<label></label>',
+        
+        // Table
+        'table': '<table>\n    <tr>\n        <td></td>\n    </tr>\n</table>',
+        'tr': '<tr>\n    <td></td>\n</tr>',
+        'td': '<td></td>',
+        'th': '<th></th>',
+        'thead': '<thead>\n    <tr>\n        <th></th>\n    </tr>\n</thead>',
+        'tbody': '<tbody>\n    <tr>\n        <td></td>\n    </tr>\n</tbody>',
+        'tfoot': '<tfoot>\n    <tr>\n        <td></td>\n    </tr>\n</tfoot>',
+        
+        // Semantic HTML5
+        'header': '<header></header>',
+        'nav': '<nav></nav>',
+        'main': '<main></main>',
+        'section': '<section></section>',
+        'article': '<article></article>',
+        'aside': '<aside></aside>',
+        'footer': '<footer></footer>',
+        'figure': '<figure>\n    <img src="" alt="">\n    <figcaption></figcaption>\n</figure>',
+        'figcaption': '<figcaption></figcaption>',
+        
+        // Media
+        'video': '<video controls>\n    <source src="" type="video/mp4">\n    Your browser does not support the video tag.\n</video>',
+        'audio': '<audio controls>\n    <source src="" type="audio/mp3">\n    Your browser does not support the audio tag.\n</audio>',
+        'canvas': '<canvas></canvas>',
+        'svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">\n    \n</svg>',
+        
+        // Meta and links
+        'meta': '<meta name="" content="">',
+        'link': '<link rel="stylesheet" href="">',
+        'script': '<script>\n    \n</script>',
+        'script:src': '<script src=""></script>',
+        'style': '<style>\n    \n</style>',
+        
+        // Common patterns
+        'div.container': '<div class="container"></div>',
+        'div.row': '<div class="row"></div>',
+        'div.col': '<div class="col"></div>',
+        'nav.navbar': '<nav class="navbar"></nav>',
+        'ul.nav': '<ul class="nav">\n    <li><a href=""></a></li>\n</ul>',
+        'div.card': '<div class="card">\n    <div class="card-header"></div>\n    <div class="card-body"></div>\n</div>',
+        
+        // Bootstrap components
+        'btn': '<button class="btn btn-primary"></button>',
+        'btn.primary': '<button class="btn btn-primary"></button>',
+        'btn.secondary': '<button class="btn btn-secondary"></button>',
+        'alert': '<div class="alert alert-primary" role="alert">\n    \n</div>',
+        'modal': '<div class="modal fade" tabindex="-1">\n    <div class="modal-dialog">\n        <div class="modal-content">\n            <div class="modal-header">\n                <h5 class="modal-title"></h5>\n                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>\n            </div>\n            <div class="modal-body">\n                \n            </div>\n            <div class="modal-footer">\n                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>\n                <button type="button" class="btn btn-primary">Save changes</button>\n            </div>\n        </div>\n    </div>\n</div>',
+    },
+    
+    // CSS expansions
+    css: {
+        // Box model
+        'm': 'margin: ;',
+        'mt': 'margin-top: ;',
+        'mr': 'margin-right: ;',
+        'mb': 'margin-bottom: ;',
+        'ml': 'margin-left: ;',
+        'p': 'padding: ;',
+        'pt': 'padding-top: ;',
+        'pr': 'padding-right: ;',
+        'pb': 'padding-bottom: ;',
+        'pl': 'padding-left: ;',
+        
+        // Display and positioning
+        'd': 'display: ;',
+        'db': 'display: block;',
+        'di': 'display: inline;',
+        'dib': 'display: inline-block;',
+        'df': 'display: flex;',
+        'dg': 'display: grid;',
+        'dn': 'display: none;',
+        'pos': 'position: ;',
+        'posa': 'position: absolute;',
+        'posr': 'position: relative;',
+        'posf': 'position: fixed;',
+        'poss': 'position: sticky;',
+        't': 'top: ;',
+        'r': 'right: ;',
+        'b': 'bottom: ;',
+        'l': 'left: ;',
+        'z': 'z-index: ;',
+        
+        // Flexbox
+        'fx': 'display: flex;',
+        'fxd': 'flex-direction: ;',
+        'fxdr': 'flex-direction: row;',
+        'fxdc': 'flex-direction: column;',
+        'fxw': 'flex-wrap: ;',
+        'fxwr': 'flex-wrap: wrap;',
+        'fxwn': 'flex-wrap: nowrap;',
+        'jc': 'justify-content: ;',
+        'jcc': 'justify-content: center;',
+        'jcs': 'justify-content: flex-start;',
+        'jce': 'justify-content: flex-end;',
+        'jcsb': 'justify-content: space-between;',
+        'jcsa': 'justify-content: space-around;',
+        'ai': 'align-items: ;',
+        'aic': 'align-items: center;',
+        'ais': 'align-items: flex-start;',
+        'aie': 'align-items: flex-end;',
+        'ais': 'align-items: stretch;',
+        
+        // Grid
+        'gd': 'display: grid;',
+        'gtc': 'grid-template-columns: ;',
+        'gtr': 'grid-template-rows: ;',
+        'gg': 'grid-gap: ;',
+        'gcg': 'grid-column-gap: ;',
+        'grg': 'grid-row-gap: ;',
+        'gc': 'grid-column: ;',
+        'gr': 'grid-row: ;',
+        'ga': 'grid-area: ;',
+        
+        // Typography
+        'ff': 'font-family: ;',
+        'fs': 'font-size: ;',
+        'fw': 'font-weight: ;',
+        'fwb': 'font-weight: bold;',
+        'fwn': 'font-weight: normal;',
+        'lh': 'line-height: ;',
+        'ta': 'text-align: ;',
+        'tac': 'text-align: center;',
+        'tal': 'text-align: left;',
+        'tar': 'text-align: right;',
+        'taj': 'text-align: justify;',
+        'td': 'text-decoration: ;',
+        'tdn': 'text-decoration: none;',
+        'tdu': 'text-decoration: underline;',
+        'tt': 'text-transform: ;',
+        'ttu': 'text-transform: uppercase;',
+        'ttl': 'text-transform: lowercase;',
+        'ttc': 'text-transform: capitalize;',
+        
+        // Colors
+        'c': 'color: ;',
+        'bg': 'background: ;',
+        'bgc': 'background-color: ;',
+        'bgi': 'background-image: ;',
+        'bgr': 'background-repeat: ;',
+        'bgrn': 'background-repeat: no-repeat;',
+        'bgs': 'background-size: ;',
+        'bgsc': 'background-size: cover;',
+        'bgp': 'background-position: ;',
+        'bgpc': 'background-position: center;',
+        
+        // Border
+        'bd': 'border: ;',
+        'bdt': 'border-top: ;',
+        'bdr': 'border-right: ;',
+        'bdb': 'border-bottom: ;',
+        'bdl': 'border-left: ;',
+        'bdw': 'border-width: ;',
+        'bds': 'border-style: ;',
+        'bdc': 'border-color: ;',
+        'bdr': 'border-radius: ;',
+        
+        // Size
+        'w': 'width: ;',
+        'h': 'height: ;',
+        'mw': 'max-width: ;',
+        'mh': 'max-height: ;',
+        'miw': 'min-width: ;',
+        'mih': 'min-height: ;',
+        'w100': 'width: 100%;',
+        'h100': 'height: 100%;',
+        'wh': 'width: ;\nheight: ;',
+        
+        // Others
+        'op': 'opacity: ;',
+        'ov': 'overflow: ;',
+        'ovh': 'overflow: hidden;',
+        'ova': 'overflow: auto;',
+        'ovs': 'overflow: scroll;',
+        'cur': 'cursor: ;',
+        'curp': 'cursor: pointer;',
+        'curd': 'cursor: default;',
+        
+        // Transitions and animations
+        'trs': 'transition: ;',
+        'trsa': 'transition: all 0.3s ease;',
+        'ani': 'animation: ;',
+        'tf': 'transform: ;',
+        
+        // Common patterns
+        'reset': '* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}',
+        'center': 'display: flex;\njustify-content: center;\nalign-items: center;',
+        'clearfix': '.clearfix::after {\n    content: "";\n    display: table;\n    clear: both;\n}',
+        'hide': 'display: none;',
+        'show': 'display: block;',
+        'absolute-center': 'position: absolute;\ntop: 50%;\nleft: 50%;\ntransform: translate(-50%, -50%);'
+    }
+};
+
+function handleEmmetExpansion(editor, type) {
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    const textNode = range.startContainer;
+    
+    if (textNode.nodeType !== Node.TEXT_NODE) return;
+    
+    const text = textNode.textContent;
+    const cursorPos = range.startOffset;
+    
+    // Find the word before the cursor
+    let start = cursorPos;
+    while (start > 0 && /[a-zA-Z0-9._:-]/.test(text[start - 1])) {
+        start--;
+    }
+    
+    const abbreviation = text.substring(start, cursorPos);
+    
+    if (abbreviation && emmetExpansions[type] && emmetExpansions[type][abbreviation]) {
+        const expansion = emmetExpansions[type][abbreviation];
+        
+        // Replace the abbreviation with the expansion
+        const newRange = document.createRange();
+        newRange.setStart(textNode, start);
+        newRange.setEnd(textNode, cursorPos);
+        newRange.deleteContents();
+        
+        // Insert the expansion
+        const expansionNode = document.createTextNode(expansion);
+        newRange.insertNode(expansionNode);
+        
+        // Position cursor intelligently
+        positionCursorInExpansion(editor, expansion, start);
+        
+        // Trigger syntax highlighting
+        highlightCurrentEditor();
+        
+        // Show visual feedback
+        showEmmetSuccess(abbreviation, expansion);
+        
+        // Trigger auto-save
+        triggerAutoSave();
+        
+        return true;
+    }
+    
+    return false;
+}
 
 // Initialize editors
 const htmlEditor = document.getElementById('html-editor');
@@ -191,6 +960,15 @@ function setupFileTreeEvents() {
 
 // Open file function - creates tabs and loads content
 function openFile(fileType, fileName) {
+    // Save current content before switching
+    if (currentFile && currentFile.type && currentFile.name) {
+        const currentEditor = getCurrentEditor();
+        if (currentEditor) {
+            fileContents[currentFile.type][currentFile.name] = currentEditor.textContent;
+        }
+        triggerAutoSave();
+    }
+
     // Create new tab
     const newTab = document.createElement('div');
     newTab.className = `tab tab-${fileType}`;
@@ -666,6 +1444,476 @@ function closeModal(modalElement) {
     modalElement.classList.remove('active');
 }
 
+// Shareable Preview System
+class ShareablePreview {
+    constructor() {
+        this.services = {
+            jsfiddle: {
+                name: 'JSFiddle',
+                icon: 'fab fa-js-square',
+                url: 'https://jsfiddle.net/api/post/library/pure/',
+                method: 'POST'
+            },
+            codepen: {
+                name: 'CodePen',
+                icon: 'fab fa-codepen',
+                url: 'https://codepen.io/pen/define',
+                method: 'POST'
+            },
+            githubgist: {
+                name: 'GitHub Gist',
+                icon: 'fab fa-github',
+                url: 'https://api.github.com/gists',
+                method: 'POST'
+            }
+        };
+    }
+
+    async generateShareableLink(service = 'jsfiddle') {
+        const htmlContent = this.getAllHTML();
+        const cssContent = this.getAllCSS();
+        const jsContent = this.getAllJS();
+
+        try {
+            switch (service) {
+                case 'jsfiddle':
+                    return await this.createJSFiddleLink(htmlContent, cssContent, jsContent);
+                case 'codepen':
+                    return await this.createCodePenLink(htmlContent, cssContent, jsContent);
+                case 'githubgist':
+                    return await this.createGitHubGistLink(htmlContent, cssContent, jsContent);
+                case 'dataurl':
+                    return this.createDataURL(htmlContent, cssContent, jsContent);
+                default:
+                    return this.createDataURL(htmlContent, cssContent, jsContent);
+            }
+        } catch (error) {
+            console.error('Error creating shareable link:', error);
+            // Fallback to data URL
+            return this.createDataURL(htmlContent, cssContent, jsContent);
+        }
+    }
+
+    getAllHTML() {
+        return Object.values(fileContents.html).join('\n');
+    }
+
+    getAllCSS() {
+        return Object.values(fileContents.css).join('\n');
+    }
+
+    getAllJS() {
+        return Object.values(fileContents.js).join('\n');
+    }
+
+    async createJSFiddleLink(html, css, js) {
+        const data = {
+            title: 'HTML.ORG.IN Editor Preview',
+            description: 'Created with HTML.ORG.IN Code Editor',
+            html: html,
+            css: css,
+            js: js,
+            resources: '',
+            dtd: 'html 5',
+            wrap: 'l',
+            save: 1
+        };
+
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+            formData.append(key, data[key]);
+        });
+
+        const response = await fetch('https://jsfiddle.net/api/post/library/pure/', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const result = await response.text();
+            // JSFiddle returns a URL in the response
+            const url = result.trim();
+            return {
+                success: true,
+                url: url,
+                service: 'JSFiddle'
+            };
+        } else {
+            throw new Error('JSFiddle API failed');
+        }
+    }
+
+    async createCodePenLink(html, css, js) {
+        const data = {
+            title: 'HTML.ORG.IN Editor Preview',
+            description: 'Created with HTML.ORG.IN Code Editor',
+            tags: ['html.org.in', 'editor', 'preview'],
+            editors: '101',
+            layout: 'left',
+            html: html,
+            css: css,
+            js: js
+        };
+
+        // CodePen uses a specific format for posting
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'https://codepen.io/pen/define';
+        form.target = '_blank';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'data';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        return {
+            success: true,
+            url: 'Opening CodePen...',
+            service: 'CodePen'
+        };
+    }
+
+    async createGitHubGistLink(html, css, js) {
+        const gistData = {
+            description: 'HTML.ORG.IN Editor Preview',
+            public: true,
+            files: {
+                'index.html': {
+                    content: this.createCompleteHTML(html, css, js)
+                },
+                'style.css': {
+                    content: css
+                },
+                'script.js': {
+                    content: js
+                }
+            }
+        };
+
+        // Note: This requires authentication for GitHub API
+        // For now, we'll create a data URL as fallback
+        return this.createDataURL(html, css, js);
+    }
+
+    createDataURL(html, css, js) {
+        const completeHTML = this.createCompleteHTML(html, css, js);
+        const blob = new Blob([completeHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        return {
+            success: true,
+            url: url,
+            service: 'Local Preview',
+            temporary: true
+        };
+    }
+
+    createCompleteHTML(html, css, js) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML.ORG.IN Editor Preview</title>
+    <style>
+        ${css}
+    </style>
+</head>
+<body>
+    ${html}
+    <script>
+        ${js}
+    </script>
+    
+    <!-- Preview Info -->
+    <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 5px 10px; border-radius: 4px; font-family: Arial, sans-serif; font-size: 12px; z-index: 10000;">
+        Created with <a href="https://editor.html.org.in" target="_blank" style="color: #4CAF50; text-decoration: none;">HTML.ORG.IN Editor</a>
+    </div>
+</body>
+</html>`;
+    }
+
+    async createTemporaryHost(html, css, js) {
+        // Using a simple approach with JSONBIN.io for temporary hosting
+        const completeHTML = this.createCompleteHTML(html, css, js);
+        
+        try {
+            // Create a unique identifier
+            const timestamp = Date.now();
+            const randomId = Math.random().toString(36).substr(2, 9);
+            const previewId = `preview-${timestamp}-${randomId}`;
+            
+            // Store the HTML content with a simple service
+            const data = {
+                id: previewId,
+                html: completeHTML,
+                created: new Date().toISOString(),
+                editor: 'HTML.ORG.IN'
+            };
+            
+            // For now, we'll use localStorage as a fallback and create a shareable data URL
+            localStorage.setItem(`shared-preview-${previewId}`, JSON.stringify(data));
+            
+            // Create a data URL that can be shared
+            const blob = new Blob([completeHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            // Try to use a public paste service as backup
+            return await this.tryPasteService(completeHTML) || {
+                success: true,
+                url: url,
+                service: 'Local Blob',
+                temporary: true,
+                note: 'This link works only on your current device'
+            };
+            
+        } catch (error) {
+            console.error('Temporary hosting failed:', error);
+            return this.createDataURL(html, css, js);
+        }
+    }
+
+    async tryPasteService(htmlContent) {
+        try {
+            // Try dpaste.com for temporary HTML hosting
+            const formData = new FormData();
+            formData.append('content', htmlContent);
+            formData.append('lexer', 'html');
+            formData.append('format', 'url');
+            formData.append('expires', '3600'); // 1 hour
+            
+            const response = await fetch('https://dpaste.com/api/v2/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const pasteUrl = await response.text();
+                return {
+                    success: true,
+                    url: pasteUrl.trim() + '.txt', // Get raw content
+                    service: 'DPaste',
+                    temporary: true,
+                    expires: '1 hour'
+                };
+            }
+        } catch (error) {
+            console.warn('Paste service failed:', error);
+        }
+        
+        return null;
+    }
+}
+
+// Initialize shareable preview system
+const shareablePreview = new ShareablePreview();
+
+// Generate shareable preview function
+async function generateShareablePreview() {
+    showToast('Generating shareable preview...', 'info');
+    
+    try {
+        // Try multiple services in order of preference
+        let result;
+        
+        // First try data URL (always works)
+        result = await shareablePreview.generateShareableLink('dataurl');
+        
+        if (result.success) {
+            // Open in new tab
+            window.open(result.url, '_blank');
+            
+            // Show sharing modal with options
+            showSharingModal(result);
+            
+            showToast(`Preview opened in new tab via ${result.service}`, 'success');
+        } else {
+            showToast('Failed to generate preview link', 'error');
+        }
+    } catch (error) {
+        console.error('Error generating shareable preview:', error);
+        showToast('Error generating shareable preview', 'error');
+    }
+}
+
+// Show sharing modal
+function showSharingModal(result) {
+    const modal = document.getElementById('sharing-modal');
+    const urlInput = document.getElementById('preview-url');
+    const urlNote = document.getElementById('url-note');
+    const qrContainer = document.getElementById('qr-container');
+    
+    if (!modal || !urlInput) return;
+    
+    // Set the URL
+    urlInput.value = result.url;
+    
+    // Update note based on service
+    if (result.temporary) {
+        urlNote.textContent = 'This is a temporary local link. It will only work on this device.';
+        urlNote.style.color = 'var(--accent-orange)';
+    } else {
+        urlNote.textContent = `Shareable link created via ${result.service}. Copy and share anywhere!`;
+        urlNote.style.color = 'var(--accent-green)';
+    }
+    
+    // Generate QR code
+    generateQRCode(result.url, qrContainer);
+    
+    // Show modal
+    modal.style.display = 'flex';
+}
+
+// Generate QR code
+function generateQRCode(url, container) {
+    // Simple QR code generation using Google Charts API
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    
+    container.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="border-radius: 8px; background: white; padding: 10px;">`;
+}
+
+// Copy to clipboard function
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'absolute';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        const success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return success;
+    }
+}
+
+// Enhanced preview generation with multiple hosting options
+async function generateAdvancedShareablePreview(service = 'auto') {
+    showToast('Creating shareable preview...', 'info');
+    
+    try {
+        let result;
+        
+        if (service === 'auto') {
+            // Try services in order of preference
+            const services = ['jsfiddle', 'dataurl'];
+            
+            for (const svc of services) {
+                try {
+                    result = await shareablePreview.generateShareableLink(svc);
+                    if (result.success) break;
+                } catch (error) {
+                    console.warn(`${svc} failed:`, error);
+                    continue;
+                }
+            }
+        } else {
+            result = await shareablePreview.generateShareableLink(service);
+        }
+        
+        if (result && result.success) {
+            // Open in new tab
+            window.open(result.url, '_blank');
+            
+            // Show sharing modal
+            showSharingModal(result);
+            
+            showToast(`Preview shared via ${result.service}!`, 'success');
+        } else {
+            throw new Error('All sharing services failed');
+        }
+        
+    } catch (error) {
+        console.error('Error generating shareable preview:', error);
+        
+        // Ultimate fallback - create local blob URL
+        const fallbackResult = await shareablePreview.generateShareableLink('dataurl');
+        window.open(fallbackResult.url, '_blank');
+        showSharingModal(fallbackResult);
+        showToast('Preview opened locally (not shareable online)', 'warning');
+    }
+}
+
+// Setup sharing modal event listeners
+function setupSharingModalEvents() {
+    const sharingModal = document.getElementById('sharing-modal');
+    const closeSharingModal = document.getElementById('close-sharing-modal');
+    const copyUrlBtn = document.getElementById('copy-url-btn');
+    const previewUrl = document.getElementById('preview-url');
+    
+    // Service buttons
+    const shareJSFiddle = document.getElementById('share-jsfiddle');
+    const shareCodePen = document.getElementById('share-codepen');
+    const shareGitHub = document.getElementById('share-github');
+    
+    // Close modal
+    if (closeSharingModal) {
+        closeSharingModal.addEventListener('click', () => {
+            if (sharingModal) {
+                sharingModal.style.display = 'none';
+            }
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (sharingModal) {
+        sharingModal.addEventListener('click', (e) => {
+            if (e.target === sharingModal) {
+                sharingModal.style.display = 'none';
+            }
+        });
+    }
+    
+    // Copy URL button
+    if (copyUrlBtn && previewUrl) {
+        copyUrlBtn.addEventListener('click', async () => {
+            const success = await copyToClipboard(previewUrl.value);
+            if (success) {
+                copyUrlBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyUrlBtn.classList.add('copied');
+                showToast('URL copied to clipboard!', 'success');
+                
+                setTimeout(() => {
+                    copyUrlBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    copyUrlBtn.classList.remove('copied');
+                }, 2000);
+            } else {
+                showToast('Failed to copy URL', 'error');
+            }
+        });
+    }
+    
+    // Service buttons
+    if (shareJSFiddle) {
+        shareJSFiddle.addEventListener('click', () => {
+            generateAdvancedShareablePreview('jsfiddle');
+        });
+    }
+    
+    if (shareCodePen) {
+        shareCodePen.addEventListener('click', () => {
+            generateAdvancedShareablePreview('codepen');
+        });
+    }
+    
+    if (shareGitHub) {
+        shareGitHub.addEventListener('click', () => {
+            generateAdvancedShareablePreview('githubgist');
+        });
+    }
+}
+
 // Setup event listeners
 function setupEventListeners() {
     // Run button
@@ -673,6 +1921,15 @@ function setupEventListeners() {
     
     // Refresh preview button
     refreshPreviewBtn.addEventListener('click', updatePreview);
+    
+    // External preview button
+    const externalPreviewBtn = document.getElementById('external-preview');
+    if (externalPreviewBtn) {
+        externalPreviewBtn.addEventListener('click', generateShareablePreview);
+    }
+    
+    // Sharing modal event listeners
+    setupSharingModalEvents();
     
     // Clear console button
     clearConsoleBtn.addEventListener('click', () => {
@@ -972,13 +2229,21 @@ function setupAutoReloadListeners() {
     // Add auto-reload toggle event listener
     autoReloadToggle.addEventListener('click', toggleAutoReload);
     
-    // Add input event listeners to all editors for auto-reload
+    // Add input event listeners to all editors for auto-reload and Emmet
     htmlEditor.addEventListener('input', () => {
         // Save content to fileContents
         if (currentFile.type === 'html') {
             fileContents.html[currentFile.name] = htmlEditor.textContent;
         }
         triggerAutoReload();
+        triggerAutoSave();
+    });
+    
+    htmlEditor.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            handleEmmetExpansion(htmlEditor, 'html');
+        }
     });
     
     cssEditor.addEventListener('input', () => {
@@ -987,6 +2252,14 @@ function setupAutoReloadListeners() {
             fileContents.css[currentFile.name] = cssEditor.textContent;
         }
         triggerAutoReload();
+        triggerAutoSave();
+    });
+    
+    cssEditor.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            handleEmmetExpansion(cssEditor, 'css');
+        }
     });
     
     jsEditor.addEventListener('input', () => {
@@ -1179,22 +2452,89 @@ document.addEventListener('DOMContentLoaded', function() {
     // Highlight syntax
     highlightCurrentEditor();
 
+    // Clear localStorage data
+    storageManager.clearData();
+
     showToast('Editor reset successfully! Starting fresh with a clean template.', 'success');
+}
+
+// Setup auto-save listeners for all editors
+function setupAutoSaveListeners() {
+    const htmlEditor = document.getElementById('html-editor');
+    const cssEditor = document.getElementById('css-editor');
+    const jsEditor = document.getElementById('js-editor');
+
+    // Add input listeners to all editors
+    [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+        if (editor) {
+            // Trigger auto-save on input changes
+            editor.addEventListener('input', () => {
+                triggerAutoSave();
+            });
+
+            // Also save on paste
+            editor.addEventListener('paste', () => {
+                setTimeout(() => {
+                    triggerAutoSave();
+                }, 100);
+            });
+
+            // Save when editor loses focus
+            editor.addEventListener('blur', () => {
+                autoSaveToLocalStorage();
+            });
+        }
+    });
+
+    // Save when switching tabs
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.tab')) {
+            autoSaveToLocalStorage();
+        }
+    });
+
+    // Save when creating/deleting files
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.file-action-btn') || e.target.closest('#create-new-file')) {
+            setTimeout(() => {
+                triggerAutoSave();
+            }, 500);
+        }
+    });
+
+    // Save before page unload
+    window.addEventListener('beforeunload', () => {
+        autoSaveToLocalStorage();
+    });
+
+    // Save periodically (every 30 seconds)
+    setInterval(() => {
+        autoSaveToLocalStorage();
+    }, 30000);
 }
 
 // Initialize the application
 function init() {
+    // Check for saved work and offer to restore BEFORE setting up other things
+    const wasRestored = checkAndOfferRestore();
+    
     // Setup events for tabs and file tree
     setupTabEvents();
     setupFileTreeEvents();
     setupEventListeners();
     setupAutoReloadListeners();
     
-    // Initialize with default HTML tab active
-    document.querySelector('.tab[data-file="html"]').click();
+    // Only initialize default if nothing was restored
+    if (!wasRestored) {
+        // Initialize with default HTML tab active
+        document.querySelector('.tab[data-file="html"]').click();
+        
+        // Initial preview update
+        updatePreview();
+    }
     
-    // Initial preview update
-    updatePreview();
+    // Setup auto-save listeners for all editors
+    setupAutoSaveListeners();
     
     // Load GitHub stats
     loadGitHubStats();
@@ -1245,7 +2585,7 @@ function init() {
 async function loadGitHubStats() {
     // Configuration - Your actual GitHub repository
     const GITHUB_USERNAME = 'Diptenusarkar'; // Your GitHub username
-    const GITHUB_REPO = 'html.org.in'; // Your repository name
+    const GITHUB_REPO = 'Code-Editor'; // Your repository name
     
     const starCountElement = document.getElementById('star-count');
     const forkCountElement = document.getElementById('fork-count');
@@ -1640,3 +2980,150 @@ function getContentType(fileType) {
 
 // Run initialization when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
+
+// Emmet Help Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const emmetIndicator = document.getElementById('emmet-indicator');
+    const emmetModal = document.getElementById('emmet-help-modal');
+    const emmetClose = document.getElementById('emmet-help-close');
+
+    // Show Emmet help modal
+    if (emmetIndicator) {
+        emmetIndicator.addEventListener('click', () => {
+            if (emmetModal) {
+                emmetModal.style.display = 'flex';
+            }
+        });
+    }
+
+    // Close Emmet help modal
+    if (emmetClose) {
+        emmetClose.addEventListener('click', () => {
+            if (emmetModal) {
+                emmetModal.style.display = 'none';
+            }
+        });
+    }
+
+    // Close modal when clicking outside
+    if (emmetModal) {
+        emmetModal.addEventListener('click', (e) => {
+            if (e.target === emmetModal) {
+                emmetModal.style.display = 'none';
+            }
+        });
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && emmetModal && emmetModal.style.display === 'flex') {
+            emmetModal.style.display = 'none';
+        }
+    });
+    
+    // Keyboard shortcut for sharing (Ctrl+Shift+O)
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+            e.preventDefault();
+            generateShareablePreview();
+        }
+    });
+});
+
+// Enhanced Emmet expansion with better cursor positioning
+function positionCursorInExpansion(editor, expansion, startPos) {
+    // Look for common cursor positions in HTML
+    const cursorMarkers = [
+        '></div>', // Between opening and closing tags
+        '></span>',
+        '></p>',
+        '></h1>', '></h2>', '></h3>', '></h4>', '></h5>', '></h6>',
+        '></li>',
+        '></button>',
+        'href=""', // In attributes
+        'src=""',
+        'alt=""',
+        'value=""',
+        'class=""',
+        'id=""',
+        ': ;', // In CSS
+        '{\n    \n}' // In CSS blocks
+    ];
+
+    let cursorPosition = startPos + expansion.length;
+
+    // Find the best cursor position
+    for (const marker of cursorMarkers) {
+        const markerIndex = expansion.indexOf(marker);
+        if (markerIndex !== -1) {
+            if (marker.includes('""')) {
+                // Position cursor inside quotes
+                cursorPosition = startPos + markerIndex + marker.indexOf('""') + 1;
+            } else if (marker === ': ;') {
+                // Position cursor between colon and semicolon
+                cursorPosition = startPos + markerIndex + 2;
+            } else if (marker.includes('{\n    \n}')) {
+                // Position cursor in CSS block
+                cursorPosition = startPos + markerIndex + 6;
+            } else {
+                // Position cursor between tags
+                cursorPosition = startPos + markerIndex + 1;
+            }
+            break;
+        }
+    }
+
+    // Set cursor position
+    const selection = window.getSelection();
+    const range = document.createRange();
+    const textNode = editor.firstChild || editor;
+    
+    if (textNode.nodeType === Node.TEXT_NODE) {
+        const adjustedPos = Math.min(cursorPosition - startPos, textNode.textContent.length);
+        range.setStart(textNode, adjustedPos);
+        range.setEnd(textNode, adjustedPos);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+}
+
+// Add visual feedback for successful Emmet expansion
+function showEmmetSuccess(abbreviation, expansion) {
+    // Create temporary visual indicator
+    const indicator = document.createElement('div');
+    indicator.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--accent-green);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    indicator.innerHTML = `<i class="fas fa-check"></i> Emmet: ${abbreviation} expanded`;
+    
+    document.body.appendChild(indicator);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        indicator.style.opacity = '1';
+    });
+    
+    // Remove after 2 seconds
+    setTimeout(() => {
+        indicator.style.opacity = '0';
+        setTimeout(() => {
+            if (indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+            }
+        }, 300);
+    }, 2000);
+}

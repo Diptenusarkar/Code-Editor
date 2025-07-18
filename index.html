@@ -1873,6 +1873,348 @@
                 display: none;
             }
         }
+
+        /* Emmet Styles */
+        .emmet-tooltip {
+            position: absolute;
+            background: var(--bg-quaternary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .emmet-tooltip.show {
+            opacity: 1;
+        }
+
+        .emmet-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent-blue);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(33, 136, 255, 0.3);
+        }
+
+        .emmet-indicator:hover {
+            background: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(33, 136, 255, 0.4);
+        }
+
+        .emmet-help-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emmet-help-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .emmet-help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .emmet-help-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .emmet-help-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .emmet-help-close:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .emmet-category {
+            margin-bottom: 25px;
+        }
+
+        .emmet-category-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .emmet-category-title i {
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        .emmet-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .emmet-example {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        .emmet-abbr {
+            color: var(--accent-orange);
+            font-weight: 600;
+            margin-right: 8px;
+            min-width: 60px;
+        }
+
+        .emmet-arrow {
+            color: var(--text-muted);
+            margin-right: 8px;
+        }
+
+        .emmet-result {
+            color: var(--text-secondary);
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Sharing Modal Styles */
+        .sharing-option {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sharing-option h3 {
+            margin: 0 0 15px 0;
+            color: var(--accent-blue);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sharing-option h3 i {
+            margin-right: 8px;
+        }
+
+        .url-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-quaternary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            padding: 12px 16px;
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover {
+            background: #22c55e;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent-blue);
+        }
+
+        .url-note {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sharing-services {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sharing-services h3 {
+            margin: 0 0 15px 0;
+            color: var(--accent-green);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sharing-services h3 i {
+            margin-right: 8px;
+        }
+
+        .service-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .service-btn {
+            padding: 12px 16px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+        }
+
+        .jsfiddle-btn {
+            background: #4d4d4d;
+            border-color: #4d4d4d;
+        }
+
+        .jsfiddle-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
+        .codepen-btn {
+            background: #000;
+            border-color: #000;
+        }
+
+        .codepen-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
+        .github-btn {
+            background: #24292e;
+            border-color: #24292e;
+        }
+
+        .github-btn:hover {
+            background: #444d56;
+            transform: translateY(-2px);
+        }
+
+        .sharing-qr {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sharing-qr h3 {
+            margin: 0 0 15px 0;
+            color: var(--accent-purple);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sharing-qr h3 i {
+            margin-right: 8px;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: var(--bg-quaternary);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .qr-placeholder i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .qr-note {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        #qr-container img {
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1886,13 +2228,13 @@
             <div class="header-actions">
                 <!-- GitHub Open Source Buttons -->
                 <div class="github-actions">
-                    <a href="https://github.com/Diptenusarkar/html.org.in" target="_blank" class="github-btn star-btn" title="Star on GitHub">
+                    <a href="https://github.com/Diptenusarkar/Code-Editor" target="_blank" class="github-btn star-btn" title="Star on GitHub">
                         <i class="fab fa-github"></i>
                         <span>Star</span>
                         <span class="github-count" id="star-count">...</span>
                         <i class="fas fa-star"></i>
                     </a>
-                    <a href="https://github.com/Diptenusarkar/html.org.in/fork" target="_blank" class="github-btn fork-btn" title="Fork on GitHub">
+                    <a href="https://github.com/Diptenusarkar/Code-Editor/fork" target="_blank" class="github-btn fork-btn" title="Fork on GitHub">
                         <i class="fas fa-code-branch"></i>
                         <span>Fork</span>
                         <span class="github-count" id="fork-count">...</span>
@@ -2038,54 +2380,13 @@
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;HTML.ORG.IN Code Editor - Demo&lt;/title&gt;
+    &lt;title&gt;New Project&lt;/title&gt;
     &lt;link rel="stylesheet" href="style.css"&gt;
 &lt;/head&gt;
 &lt;body&gt;
-    &lt;div class="hero-section"&gt;
-        &lt;div class="container"&gt;
-            &lt;h1 class="hero-title"&gt;Welcome to HTML.ORG.IN Code Editor&lt;/h1&gt;
-            &lt;p class="hero-subtitle"&gt;A open Source web base code editor for all&lt;/p&gt;
-            &lt;div class="hero-actions"&gt;
-                &lt;button class="btn btn-primary" id="demo-btn"&gt;
-                    &lt;i class="fas fa-play"&gt;&lt;/i&gt;
-                    Try Demo
-                &lt;/button&gt;
-                &lt;button class="btn btn-secondary" id="learn-btn"&gt;
-                    &lt;i class="fas fa-book"&gt;&lt;/i&gt;
-                    Learn More
-                &lt;/button&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-    
-    &lt;div class="features-section"&gt;
-        &lt;div class="container"&gt;
-            &lt;h2 class="section-title"&gt;Powerful Features&lt;/h2&gt;
-            &lt;div class="features-grid"&gt;
-                &lt;div class="feature-card"&gt;
-                    &lt;div class="feature-icon"&gt;
-                        &lt;i class="fas fa-code"&gt;&lt;/i&gt;
-                    &lt;/div&gt;
-                    &lt;h3&gt;Smart Code Editor&lt;/h3&gt;
-                    &lt;p&gt;Syntax highlighting, auto-completion, and intelligent code suggestions&lt;/p&gt;
-                &lt;/div&gt;
-                &lt;div class="feature-card"&gt;
-                    &lt;div class="feature-icon"&gt;
-                        &lt;i class="fas fa-desktop"&gt;&lt;/i&gt;
-                    &lt;/div&gt;
-                    &lt;h3&gt;Live Preview&lt;/h3&gt;
-                    &lt;p&gt;Real-time preview of your web applications with instant updates&lt;/p&gt;
-                &lt;/div&gt;
-                &lt;div class="feature-card"&gt;
-                    &lt;div class="feature-icon"&gt;
-                        &lt;i class="fas fa-terminal"&gt;&lt;/i&gt;
-                    &lt;/div&gt;
-                    &lt;h3&gt;Integrated Console&lt;/h3&gt;
-                    &lt;p&gt;Built-in console for debugging and testing your JavaScript code&lt;/p&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;Welcome to Your New Project&lt;/h1&gt;
+        &lt;p&gt;Start building something amazing!&lt;/p&gt;
     &lt;/div&gt;
     
     &lt;script src="script.js"&gt;&lt;/script&gt;
@@ -2103,19 +2404,7 @@
                                 <i class="fas fa-map"></i>
                             </button>
                         </div>
-                        <pre class="code-editor"><code class="language-css" id="css-editor" contenteditable="true" spellcheck="false">:root {
-    --color-primary: #2188ff;
-    --color-secondary: #8b5cf6;
-    --color-accent: #fb8500;
-    --color-text: #24292f;
-    --color-text-light: #656d76;
-    --color-bg: #ffffff;
-    --color-bg-secondary: #f6f8fa;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --radius: 8px;
-    --transition: all 0.3s ease;
-}
-
+                        <pre class="code-editor"><code class="language-css" id="css-editor" contenteditable="true" spellcheck="false">/* Reset and base styles */
 * {
     margin: 0;
     padding: 0;
@@ -2123,169 +2412,27 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: var(--color-text);
+    font-family: Arial, sans-serif;
     line-height: 1.6;
-    background-color: var(--color-bg);
+    color: #333;
+    background-color: #f4f4f4;
 }
 
 .container {
-    width: 90%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Hero Section */
-.hero-section {
-    padding: 100px 0 60px;
-    background: linear-gradient(45deg, #f6f8fa, #e1e4e8);
+    padding: 20px;
     text-align: center;
 }
 
-.hero-title {
-    font-size: 48px;
-    margin-bottom: 16px;
-    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
 }
 
-.hero-subtitle {
-    font-size: 20px;
-    color: var(--color-text-light);
-    margin-bottom: 40px;
-}
-
-.hero-actions {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-}
-
-.btn {
-    padding: 12px 24px;
-    border-radius: var(--radius);
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: var(--transition);
-}
-
-.btn-primary {
-    background: var(--color-primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #1f7bd4;
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--color-text);
-    border: 1px solid var(--color-text-light);
-}
-
-.btn-secondary:hover {
-    background: var(--color-bg-secondary);
-    transform: translateY(-2px);
-}
-
-/* Features Section */
-.features-section {
-    padding: 80px 0;
-    background-color: var(--color-bg);
-}
-
-.section-title {
-    text-align: center;
-    margin-bottom: 60px;
-    font-size: 36px;
-    position: relative;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    width: 80px;
-    height: 4px;
-    background: var(--color-primary);
-    bottom: -16px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 2px;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-}
-
-.feature-card {
-    padding: 30px;
-    background: var(--color-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    text-align: center;
-    border: 1px solid #e1e4e8;
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.feature-icon {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 24px;
-}
-
-.feature-icon i {
-    font-size: 28px;
-    color: white;
-}
-
-.feature-card h3 {
-    margin-bottom: 16px;
-    font-size: 20px;
-}
-
-.feature-card p {
-    color: var(--color-text-light);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-title {
-        font-size: 36px;
-    }
-    
-    .hero-subtitle {
-        font-size: 18px;
-    }
-    
-    .hero-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .features-grid {
-        grid-template-columns: 1fr;
-    }
+p {
+    font-size: 18px;
+    color: #666;
 }</code></pre>
                     </div>
                     <div class="editor-wrapper" id="js-wrapper" style="display: none;">
@@ -2299,89 +2446,11 @@ body {
                                 <i class="fas fa-map"></i>
                             </button>
                         </div>
-                        <pre class="code-editor"><code class="language-javascript" id="js-editor" contenteditable="true" spellcheck="false">// Wait for the DOM to be fully loaded
+                        <pre class="code-editor"><code class="language-javascript" id="js-editor" contenteditable="true" spellcheck="false">// Your JavaScript code here
 document.addEventListener('DOMContentLoaded', function() {
-    // Elements
-    const demoBtn = document.getElementById('demo-btn');
-    const learnBtn = document.getElementById('learn-btn');
+    console.log('Project initialized!');
     
-    // Event listeners
-    demoBtn.addEventListener('click', function() {
-        console.log('Demo button clicked!');
-        showNotification('Demo mode activated', 'success');
-        
-        // Sample animation
-        animateFeatureCards();
-    });
-    
-    learnBtn.addEventListener('click', function() {
-        console.log('Learn more button clicked!');
-        showNotification('Redirecting to documentation...', 'info');
-        
-        // Simulate redirection after a delay
-        setTimeout(() => {
-            console.log('Redirection would happen here in a real application');
-        }, 1500);
-    });
-    
-    // Functions
-    function showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas ${getIconForType(type)}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        // Add to body
-        document.body.appendChild(notification);
-        
-        // Show with animation
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 10);
-        
-        // Remove after timeout
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 3000);
-        
-        console.log(`Notification: ${message} (${type})`);
-    }
-    
-    function getIconForType(type) {
-        switch(type) {
-            case 'success': return 'fa-check-circle';
-            case 'error': return 'fa-exclamation-circle';
-            case 'warning': return 'fa-exclamation-triangle';
-            case 'info': 
-            default: return 'fa-info-circle';
-        }
-    }
-    
-    function animateFeatureCards() {
-        const cards = document.querySelectorAll('.feature-card');
-        
-        cards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.transform = 'scale(1.05)';
-                
-                setTimeout(() => {
-                    card.style.transform = 'translateY(-10px)';
-                }, 300);
-            }, index * 200);
-        });
-    }
-    
-    // Initialize
-    console.log('HTML.ORG.IN Code Editor demo initialized');
-    showNotification('Welcome to HTML.ORG.IN Code Editor!', 'success');
+    // Add your code here
 });</code></pre>
                     </div>
                     
@@ -2401,8 +2470,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <button class="preview-btn" id="refresh-preview">
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
-                                    <button class="preview-btn" id="external-preview">
+                                    <button class="preview-btn" id="external-preview" title="Share Preview in New Tab (Ctrl+Shift+O)">
                                         <i class="fas fa-external-link-alt"></i>
+                                        Share
                                     </button>
                                 </div>
                             </div>
@@ -2448,6 +2518,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="status-item success">
                     <i class="fas fa-check-circle"></i>
                     <span>Ready</span>
+                </div>
+                <div class="status-item" id="auto-save-status">
+                    <i class="fas fa-save"></i>
+                    <span>Auto-saved</span>
                 </div>
                 <div class="status-item">
                     <i class="fas fa-code-branch"></i>
@@ -2650,6 +2724,183 @@ document.addEventListener('DOMContentLoaded', function() {
     
     <!-- Load Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Emmet Help Modal -->
+    <div class="emmet-help-modal" id="emmet-help-modal">
+        <div class="emmet-help-content">
+            <div class="emmet-help-header">
+                <h2 class="emmet-help-title">
+                    <i class="fas fa-rocket"></i>
+                    Emmet Abbreviations
+                </h2>
+                <button class="emmet-help-close" id="emmet-help-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="emmet-category">
+                <h3 class="emmet-category-title">
+                    <i class="fab fa-html5"></i>
+                    HTML Abbreviations
+                </h3>
+                <div class="emmet-examples">
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">!</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">HTML5 boilerplate</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">div</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">&lt;div&gt;&lt;/div&gt;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">ul</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">&lt;ul&gt;&lt;li&gt;&lt;/li&gt;&lt;/ul&gt;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">input:text</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">&lt;input type="text"&gt;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">nav.navbar</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">&lt;nav class="navbar"&gt;&lt;/nav&gt;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">btn.primary</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">&lt;button class="btn btn-primary"&gt;&lt;/button&gt;</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="emmet-category">
+                <h3 class="emmet-category-title">
+                    <i class="fab fa-css3-alt"></i>
+                    CSS Abbreviations
+                </h3>
+                <div class="emmet-examples">
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">m</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">margin: ;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">p</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">padding: ;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">df</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">display: flex;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">jcc</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">justify-content: center;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">tac</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">text-align: center;</span>
+                    </div>
+                    <div class="emmet-example">
+                        <span class="emmet-abbr">bgc</span>
+                        <span class="emmet-arrow">→</span>
+                        <span class="emmet-result">background-color: ;</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="emmet-category">
+                <h3 class="emmet-category-title">
+                    <i class="fas fa-keyboard"></i>
+                    How to Use
+                </h3>
+                <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                    <p style="margin: 0 0 10px 0; color: var(--text-primary);">1. Type an abbreviation (e.g., <code style="background: var(--bg-quaternary); padding: 2px 6px; border-radius: 3px; color: var(--accent-orange);">div</code>)</p>
+                    <p style="margin: 0 0 10px 0; color: var(--text-primary);">2. Press <kbd style="background: var(--accent-blue); color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">Tab</kbd> to expand</p>
+                    <p style="margin: 0; color: var(--text-primary);">3. The abbreviation will be replaced with the full code</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emmet Indicator -->
+    <div class="emmet-indicator" id="emmet-indicator">
+        <i class="fas fa-rocket"></i>
+        Emmet
+    </div>
+
+    <!-- Sharing Modal -->
+    <div class="modal-overlay" id="sharing-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-share-alt"></i>
+                    Share Your Preview
+                </h2>
+                <button class="modal-close" id="close-sharing-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="sharing-option">
+                    <h3>
+                        <i class="fas fa-link"></i>
+                        Direct Link
+                    </h3>
+                    <div class="url-container">
+                        <input type="text" id="preview-url" readonly class="url-input">
+                        <button class="copy-btn" id="copy-url-btn">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="url-note" id="url-note">Click to copy and share this link anywhere</p>
+                </div>
+
+                <div class="sharing-services">
+                    <h3>
+                        <i class="fas fa-cloud"></i>
+                        Share on Platforms
+                    </h3>
+                    <div class="service-buttons">
+                        <button class="service-btn jsfiddle-btn" id="share-jsfiddle">
+                            <i class="fab fa-js-square"></i>
+                            Share on JSFiddle
+                        </button>
+                        <button class="service-btn codepen-btn" id="share-codepen">
+                            <i class="fab fa-codepen"></i>
+                            Share on CodePen
+                        </button>
+                        <button class="service-btn github-btn" id="share-github">
+                            <i class="fab fa-github"></i>
+                            Create GitHub Gist
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sharing-qr">
+                    <h3>
+                        <i class="fas fa-qrcode"></i>
+                        QR Code
+                    </h3>
+                    <div class="qr-container" id="qr-container">
+                        <div class="qr-placeholder">
+                            <i class="fas fa-qrcode"></i>
+                            <p>Generating QR code...</p>
+                        </div>
+                    </div>
+                    <p class="qr-note">Scan with mobile device to view preview</p>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Main Editor Script -->
     <script src="editor.js"></script>
