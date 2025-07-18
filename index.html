@@ -3,13 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeStudio Pro - Web Code Editor</title>
-    <meta name="description" content="A powerful browser-based code editor with syntax highlighting, live preview, and integrated console.">
+    <title>HTML.ORG.IN Code Editor - A open Source web base code editor for all</title>
+    <meta name="description" content="A powerful browser-based code editor with syntax highlighting, live preview, and integrated console for web developers.">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="HTML editor, online code editor, web development, browser code editor, free code editor, HTML.ORG.IN, open source editor, web based editor, JavaScript editor, CSS editor">
+    <meta name="author" content="HTML.ORG.IN">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://editor.html.org.in/">
+    <meta property="og:title" content="HTML.ORG.IN Code Editor - A open Source web base code editor for all">
+    <meta property="og:description" content="Write, edit, and preview HTML, CSS, and JavaScript code directly in your browser with this powerful open source code editor.">
+    <meta property="og:image" content="https://editor.html.org.in/preview.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://editor.html.org.in/">
+    <meta property="twitter:title" content="HTML.ORG.IN Code Editor - A open Source web base code editor for all">
+    <meta property="twitter:description" content="Write, edit, and preview HTML, CSS, and JavaScript code directly in your browser with this powerful open source code editor.">
+    <meta property="twitter:image" content="https://editor.html.org.in/preview.jpg">
+    
+    <!-- Canonical URL -->
+    <meta rel="canonical" href="https://editor.html.org.in/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://editor.html.org.in/favicon.png">
+    <link rel="apple-touch-icon" href="https://editor.html.org.in/apple-touch-icon.png">
+    
+    <!-- Mobile App Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HTML.ORG.IN Editor">
+    <meta name="application-name" content="HTML.ORG.IN Editor">
+    <meta name="theme-color" content="#0d1117">
+    
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    
+    <!-- JSZip library for creating ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HTML.ORG.IN Code Editor",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "A open Source web base code editor for all with syntax highlighting, live preview, and integrated console",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "215"
+      },
+      "featureList": "Syntax highlighting, Live preview, Integrated console, Multiple file editing, Folder organization, Dark/Light themes"
+    }
+    </script>
     <style>
         :root {
             --bg-primary: #0d1117;
@@ -100,8 +165,165 @@
         
         .header-actions {
             display: flex;
-            gap: 8px;
+            gap: 16px;
             align-items: center;
+        }
+
+        .github-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .github-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .github-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+        }
+
+        .github-btn i {
+            font-size: 14px;
+        }
+
+        .github-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+        }
+
+        .github-count:contains('...') {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .star-btn .github-count {
+            background: rgba(51, 51, 51, 0.15);
+            color: #333;
+        }
+
+        .fork-btn .github-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        .github-btn:hover .github-count {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .star-btn {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            border-color: #ffd700;
+        }
+
+        .star-btn:hover {
+            background: linear-gradient(135deg, #ffed4e, #ffd700);
+            color: #333;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+        }
+
+        .star-btn .fa-star {
+            animation: sparkle 2s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .fork-btn {
+            background: linear-gradient(135deg, #2188ff, #0366d6);
+            color: white;
+            border-color: #2188ff;
+        }
+
+        .fork-btn:hover {
+            background: linear-gradient(135deg, #0366d6, #2188ff);
+            color: white;
+            box-shadow: 0 4px 16px rgba(33, 136, 255, 0.4);
+        }
+
+        .sponsor-btn {
+            background: linear-gradient(135deg, #ea4aaa, #ff69b4);
+            color: white;
+            border-color: #ea4aaa;
+            position: relative;
+        }
+
+        .sponsor-btn:hover {
+            background: linear-gradient(135deg, #ff69b4, #ea4aaa);
+            color: white;
+            box-shadow: 0 4px 16px rgba(234, 74, 170, 0.4);
+        }
+
+        .sponsor-btn .fa-heart {
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes countUp {
+            0% { 
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive adjustments for GitHub buttons */
+        @media (max-width: 768px) {
+            .github-actions {
+                display: none;
+            }
+            
+            .header-actions {
+                gap: 8px;
+            }
         }
 
         .theme-toggle {
@@ -119,7 +341,7 @@
             transform: translateY(-1px);
         }
 
-        .save-btn, .format-btn {
+        .save-btn, .format-btn, .reset-btn {
             background: var(--accent-green);
             border: none;
             color: white;
@@ -131,9 +353,10 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            position: relative;
         }
 
-        .save-btn:hover, .format-btn:hover {
+        .save-btn:hover, .format-btn:hover, .reset-btn:hover {
             background: #22c55e;
             transform: translateY(-1px);
         }
@@ -144,6 +367,14 @@
 
         .format-btn:hover {
             background: #f59e0b;
+        }
+
+        .reset-btn {
+            background: var(--accent-red);
+        }
+
+        .reset-btn:hover {
+            background: #dc2626;
         }
         
         /* Main Content Area */
@@ -259,6 +490,8 @@
             flex: 1;
             padding: 8px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .file-item {
@@ -271,6 +504,8 @@
             transition: all 0.2s ease;
             gap: 8px;
             position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .file-item:hover {
@@ -322,24 +557,218 @@
         .file-js i { color: #f0db4f; }
         .folder i { color: #ffd866; }
         
-        /* Folder styles */
+        /* Modern Folder styles */
         .file-item.folder {
             cursor: pointer;
             position: relative;
+            background-color: rgba(255, 216, 102, 0.03);
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column; /* Stack folder header and content vertically */
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px;
         }
         
-        .folder-contents {
-            margin-left: 20px;
+        /* Create wrapper for folder header */
+        .folder-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+        
+        .folder-header i {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+        
+        .file-item.folder.open .folder-header i.fa-folder {
+            transform: rotate(0deg) scale(1.1);
+            color: #ffd866;
+        }
+        
+        .file-item.folder.open .folder-header i.fa-folder-open {
+            animation: folderOpen 0.3s forwards;
+        }
+        
+        @keyframes folderOpen {
+            0% { transform: rotate(-5deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+            100% { transform: rotate(0) scale(1.1); }
+        }
+        
+        .file-item.folder::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(to bottom, transparent, #ffd866, transparent);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .file-item.folder:hover {
+            background-color: rgba(255, 216, 102, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-item.folder:hover::before {
+            opacity: 0.7;
+        }
+        
+        .file-item.folder.open {
+            background-color: rgba(255, 216, 102, 0.08);
+            border-left: 2px solid #ffd866;
             padding-left: 10px;
-            border-left: 1px dashed var(--border-color);
+            margin-bottom: 8px;
+            box-shadow: 0 2px 8px rgba(255, 216, 102, 0.07);
         }
         
+        .file-item.folder .file-name {
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Modern badge for file count */
+        .file-item.folder .folder-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 216, 102, 0.15);
+            color: #ffd866;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            margin-left: 8px;
+            min-width: 20px;
+            height: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .file-item.folder:hover .folder-badge {
+            background: rgba(255, 216, 102, 0.25);
+            transform: scale(1.05);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); background: rgba(255, 216, 102, 0.3); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Folder header styles */
+        .folder-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .folder-header .file-name {
+            flex-grow: 1;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .folder-header .folder-badge {
+            margin-left: auto;
+            margin-right: 8px;
+        }
+        
+        /* Improved folder contents styling */
+        .folder-contents {
+            margin-left: 16px;
+            padding-left: 16px;
+            border-left: 2px dashed rgba(255, 216, 102, 0.2);
+            margin-top: 6px;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            display: none;
+            flex-direction: column; /* Stack child elements vertically */
+            width: 100%; /* Ensure full width */
+        }
+        
+        .folder-contents::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: linear-gradient(to bottom, #ffd866, transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .file-item.folder.open .folder-contents {
+            display: flex; /* Use flex display for vertical stacking */
+            animation: expandFolder 0.3s forwards;
+        }
+        
+        .file-item.folder.open .folder-contents::before {
+            opacity: 0.5;
+        }
+        
+        @keyframes expandFolder {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Files inside folders */
         .folder-contents .file-item {
-            margin-top: 5px;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            background: rgba(33, 38, 45, 0.3);
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+            width: 100%; /* Ensure files take full width */
+            box-sizing: border-box; /* Include padding in width calculation */
         }
         
-        .file-item.folder .file-actions .add-file {
+        .folder-contents .file-item:hover {
+            transform: translateX(4px);
+            background: rgba(33, 38, 45, 0.5);
+        }
+        
+        /* Add file button */
+        .folder-header .file-actions .add-file {
             color: var(--accent-green);
+            background: rgba(47, 214, 111, 0.1);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .file-item.folder .file-actions .add-file:hover {
+            background: rgba(47, 214, 111, 0.2);
+            transform: rotate(90deg);
         }
         
         /* Editor Area */
@@ -603,6 +1032,24 @@
         .preview-btn:hover {
             background: var(--hover-bg);
             color: var(--text-primary);
+        }
+        
+        .preview-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .preview-btn.active:hover {
+            background: #1f7bd4;
+        }
+        
+        .preview-btn.active i {
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
         .preview {
@@ -1051,6 +1498,308 @@
             color: var(--text-primary);
         }
 
+        /* Download Modal Styles */
+        .download-modal {
+            width: 600px;
+            max-width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .sponsor-section {
+            background: linear-gradient(135deg, #ea4aaa, #ff69b4);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sponsor-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sponsor-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sponsor-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            animation: heartPulse 2s infinite;
+        }
+
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .sponsor-section h3 {
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .sponsor-section p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .sponsor-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .sponsor-link {
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sponsor-link.primary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .sponsor-link.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .sponsor-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .download-options h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .download-option-card {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-option-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(33, 136, 255, 0.2);
+            background: var(--hover-bg);
+        }
+
+        .download-option-card:active {
+            transform: translateY(-2px);
+        }
+
+        .option-icon {
+            font-size: 32px;
+            color: var(--accent-blue);
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .download-option-card:hover .option-icon {
+            transform: scale(1.1);
+        }
+
+        .download-option-card h4 {
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .download-option-card p {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .option-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .option-badge.popular {
+            background: var(--accent-orange);
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .download-progress {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .progress-icon {
+            font-size: 48px;
+            color: var(--accent-blue);
+            margin-bottom: 20px;
+        }
+
+        .download-progress h4 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-quaternary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShine 1.5s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .download-progress p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Success Animation */
+        .download-success {
+            animation: successBounce 0.6s ease-out;
+        }
+
+        @keyframes successBounce {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Reset Modal Styles */
+        .reset-warning {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .warning-icon {
+            color: var(--accent-yellow);
+            font-size: 24px;
+            margin-top: 4px;
+        }
+
+        .warning-content h3 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .warning-content p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .warning-content p:last-child {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .btn-secondary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background: #1f7bd4;
+            transform: translateY(-1px);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sponsor-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
         /* Light theme */
         .light-theme {
             --bg-primary: #ffffff;
@@ -1132,20 +1881,46 @@
         <div class="header">
             <div class="logo">
                 <i class="fas fa-code"></i>
-                <h1>CodeStudio Pro</h1>
+                <h1>HTML.ORG.IN Code Editor</h1>
             </div>
             <div class="header-actions">
-                <button class="format-btn" id="format-btn">
-                    <i class="fas fa-magic"></i>
-                    Format
-                </button>
-                <button class="save-btn" id="save-btn">
-                    <i class="fas fa-save"></i>
-                    Save
-                </button>
-                <button class="theme-toggle" id="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <!-- GitHub Open Source Buttons -->
+                <div class="github-actions">
+                    <a href="https://github.com/Diptenusarkar/html.org.in" target="_blank" class="github-btn star-btn" title="Star on GitHub">
+                        <i class="fab fa-github"></i>
+                        <span>Star</span>
+                        <span class="github-count" id="star-count">...</span>
+                        <i class="fas fa-star"></i>
+                    </a>
+                    <a href="https://github.com/Diptenusarkar/html.org.in/fork" target="_blank" class="github-btn fork-btn" title="Fork on GitHub">
+                        <i class="fas fa-code-branch"></i>
+                        <span>Fork</span>
+                        <span class="github-count" id="fork-count">...</span>
+                    </a>
+                    <a href="https://github.com/sponsors/Diptenusarkar" target="_blank" class="github-btn sponsor-btn" title="Sponsor this project">
+                        <i class="fas fa-heart"></i>
+                        <span>Sponsor</span>
+                    </a>
+                </div>
+                
+                <!-- Editor Actions -->
+                <div class="editor-actions">
+                    <button class="reset-btn" id="reset-btn" title="Reset Editor">
+                        <i class="fas fa-redo"></i>
+                        Reset
+                    </button>
+                    <button class="format-btn" id="format-btn">
+                        <i class="fas fa-magic"></i>
+                        Format
+                    </button>
+                    <button class="save-btn" id="save-btn">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    <button class="theme-toggle" id="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -1263,14 +2038,14 @@
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;CodeStudio Pro - Demo&lt;/title&gt;
+    &lt;title&gt;HTML.ORG.IN Code Editor - Demo&lt;/title&gt;
     &lt;link rel="stylesheet" href="style.css"&gt;
 &lt;/head&gt;
 &lt;body&gt;
     &lt;div class="hero-section"&gt;
         &lt;div class="container"&gt;
-            &lt;h1 class="hero-title"&gt;Welcome to CodeStudio Pro&lt;/h1&gt;
-            &lt;p class="hero-subtitle"&gt;A powerful, modern code editor with advanced features&lt;/p&gt;
+            &lt;h1 class="hero-title"&gt;Welcome to HTML.ORG.IN Code Editor&lt;/h1&gt;
+            &lt;p class="hero-subtitle"&gt;A open Source web base code editor for all&lt;/p&gt;
             &lt;div class="hero-actions"&gt;
                 &lt;button class="btn btn-primary" id="demo-btn"&gt;
                     &lt;i class="fas fa-play"&gt;&lt;/i&gt;
@@ -1605,8 +2380,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize
-    console.log('CodeStudio Pro demo initialized');
-    showNotification('Welcome to CodeStudio Pro!', 'success');
+    console.log('HTML.ORG.IN Code Editor demo initialized');
+    showNotification('Welcome to HTML.ORG.IN Code Editor!', 'success');
 });</code></pre>
                     </div>
                     
@@ -1619,6 +2394,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <span>Preview</span>
                                 </div>
                                 <div class="preview-actions">
+                                    <button class="preview-btn" id="auto-reload-toggle" title="Toggle Auto Reload">
+                                        <i class="fas fa-sync-alt"></i>
+                                        Auto
+                                    </button>
                                     <button class="preview-btn" id="refresh-preview">
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
@@ -1706,7 +2485,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="modal-content">
                 <div class="input-group">
                     <label for="new-filename">File Name</label>
-                    <input type="text" id="new-filename" placeholder="e.g., app.js">
+                    <input type="text" id="new-filename" placeholder="e.g., app.js, styles.css, index.html">
                 </div>
                 <div class="input-group">
                     <label for="new-filetype">File Type</label>
@@ -1741,8 +2520,126 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
+    <!-- Reset Confirmation Modal -->
+    <div class="modal-overlay" id="reset-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-redo"></i>
+                    Reset Editor
+                </h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="reset-warning">
+                    <div class="warning-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="warning-content">
+                        <h3>This will reset everything!</h3>
+                        <p>All your current work will be lost and the editor will be reset to a clean template. This action cannot be undone.</p>
+                        <p><strong>Do you want to download your current work before resetting?</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel" id="cancel-reset">Cancel</button>
+                <button class="modal-btn btn-secondary" id="download-and-reset">
+                    <i class="fas fa-download"></i>
+                    Download & Reset
+                </button>
+                <button class="modal-btn btn-primary" id="confirm-reset" style="background-color: var(--accent-red);">
+                    <i class="fas fa-redo"></i>
+                    Just Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- Download Modal -->
+    <div class="modal-overlay" id="download-modal">
+        <div class="modal download-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-download"></i>
+                    Download Your Project
+                </h2>
+                <button class="modal-close" id="close-download-modal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <!-- Sponsor Section -->
+                <div class="sponsor-section">
+                    <div class="sponsor-content">
+                        <div class="sponsor-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h3>❤️ Support Open Source Development</h3>
+                        <p>Help us keep this editor free and awesome! Your support means the world to us.</p>
+                        <div class="sponsor-buttons">
+                            <a href="https://github.com/sponsors/Diptenusarkar" target="_blank" class="sponsor-link primary">
+                                <i class="fab fa-github"></i>
+                                Sponsor on GitHub
+                            </a>
+                            <a href="https://ko-fi.com/diptenusarkar" target="_blank" class="sponsor-link secondary">
+                                <i class="fas fa-coffee"></i>
+                                Buy me a coffee
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Options -->
+                <div class="download-options">
+                    <h3>Choose Download Option</h3>
+                    <div class="download-grid">
+                        <button class="download-option-card" id="modal-download-current">
+                            <div class="option-icon">
+                                <i class="fas fa-file-code"></i>
+                            </div>
+                            <h4>Current File</h4>
+                            <p>Download the active file you're editing</p>
+                            <div class="option-badge">Quick</div>
+                        </button>
+                        
+                        <button class="download-option-card" id="modal-download-zip">
+                            <div class="option-icon">
+                                <i class="fas fa-file-archive"></i>
+                            </div>
+                            <h4>All Files (ZIP)</h4>
+                            <p>Bundle all your files in a ZIP archive</p>
+                            <div class="option-badge popular">Popular</div>
+                        </button>
+                        
+                        <button class="download-option-card" id="modal-download-project">
+                            <div class="option-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h4>Complete Project</h4>
+                            <p>Single HTML file with embedded CSS & JS</p>
+                            <div class="option-badge">All-in-One</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="download-progress" id="download-progress" style="display: none;">
+                    <div class="progress-content">
+                        <div class="progress-icon">
+                            <i class="fas fa-cog fa-spin"></i>
+                        </div>
+                        <h4 id="progress-title">Preparing your download...</h4>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p id="progress-text">Please wait while we prepare your files</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Load Prism.js for syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
